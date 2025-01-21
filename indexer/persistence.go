@@ -93,6 +93,10 @@ func (i *Indexer) BatchPersistenceIds(ctx context.Context, ids []int64, goroutin
 				if err != nil {
 					log.Printf("persistence post %d failed: %v", id, err)
 					failedCount++
+					if errors.Is(err, ErrStatusMethodNotAllowed) {
+						log.Printf("get post %d failed: %v, break", id, err)
+						break
+					}
 					continue
 				}
 				successCount++

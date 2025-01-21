@@ -3,7 +3,12 @@ package indexer
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"net/http"
+)
+
+var (
+	ErrStatusMethodNotAllowed = errors.New("status code: 405")
 )
 
 // GetPostInfo 获取帖子信息
@@ -16,6 +21,9 @@ func GetPostInfo(id int64) (ret *PostInfoResp, err error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
+		if resp.StatusCode == 405 {
+			return nil, ErrStatusMethodNotAllowed
+		}
 		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
 	}
 
