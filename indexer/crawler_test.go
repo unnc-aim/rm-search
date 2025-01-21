@@ -13,7 +13,7 @@ func TestGetPostInfo(t *testing.T) {
 }
 
 func TestGetPostInfo2(t *testing.T) {
-	const startId = 54000
+	const startId = 54050
 	const endId = 54100
 	for i := startId; i < endId; i++ {
 		post, err := GetPostInfo(int64(i))
@@ -22,7 +22,7 @@ func TestGetPostInfo2(t *testing.T) {
 		}
 		t.Logf("[%d] PostInfo: %+v", i, post)
 		if post.Data != nil {
-			t.Logf("Title: %s", post.Data.Title)
+			t.Logf("Data: %+v", post.Data)
 		}
 	}
 }

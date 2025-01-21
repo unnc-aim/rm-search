@@ -2,10 +2,10 @@ package indexer
 
 import "time"
 
-type PostInfoResp RestResp[PostInfo]
+type PostInfoResp RestResp[any]
 
 type RestResp[T any] struct {
-	Code    int64  `json:"code"`
+	Code    int32  `json:"code"`
 	Message string `json:"message"`
 	Success bool   `json:"success"`
 	Data    *T     `json:"data,omitempty"`
