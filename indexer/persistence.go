@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"github.com/scutrobotlab/bbs-search/database/model"
 	"log"
 	"sync"
@@ -45,7 +46,13 @@ func (i *Indexer) BatchPersistenceIfNotExist(ctx context.Context, startId, endId
 func (i *Indexer) BatchPersistence(ctx context.Context, startId, endId int64, goroutine int) error {
 	wg := sync.WaitGroup{}
 	wg.Add(goroutine)
-	step := (endId - startId) / int64(goroutine)
+
+	ids := make([]int64, 0, endId-startId)
+	for id := startId; id < endId; id++ {
+		ids = append(ids, id)
+	}
+	chunks := lo.Chunk(ids, goroutine)
+
 	for j := 0; j < goroutine; j++ {
 		go func(j int) {
 			log.Printf("goroutine %d start", j)
@@ -53,7 +60,7 @@ func (i *Indexer) BatchPersistence(ctx context.Context, startId, endId int64, go
 				wg.Done()
 				log.Printf("goroutine %d end", j)
 			}()
-			for id := startId + int64(j)*step; id < startId+int64(j+1)*step; id++ {
+			for _, id := range chunks[j] {
 				err := i.Persistence(ctx, id)
 				if err != nil {
 					log.Printf("persistence post %d failed: %v", id, err)
@@ -63,6 +70,7 @@ func (i *Indexer) BatchPersistence(ctx context.Context, startId, endId int64, go
 			}
 		}(j)
 	}
+
 	wg.Wait()
 	return nil
 }
