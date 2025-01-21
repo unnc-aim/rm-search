@@ -7,59 +7,67 @@ import (
 	"github.com/samber/lo"
 	"github.com/scutrobotlab/bbs-search/database/model"
 	"log"
+	"math"
 	"sync"
 )
 
-// BatchPersistenceIfNotExist 批量持久化帖子，如果帖子不存在
-func (i *Indexer) BatchPersistenceIfNotExist(ctx context.Context, startId, endId int64, goroutine int) error {
+// BatchPersistenceRangeIfNotExist 批量持久化帖子，如果帖子不存在
+func (i *Indexer) BatchPersistenceRangeIfNotExist(ctx context.Context, startId, endId int64, goroutine int) error {
+	// 查询已经持久化的帖子
 	p := i.SvcCtx.Query.PostResp
-	wg := sync.WaitGroup{}
-	wg.Add(goroutine)
-	step := (endId - startId) / int64(goroutine)
-	for j := 0; j < goroutine; j++ {
-		go func(j int) {
-			log.Printf("goroutine %d start", j)
-			defer func() {
-				wg.Done()
-				log.Printf("goroutine %d end", j)
-			}()
-			for id := startId + int64(j)*step; id < startId+int64(j+1)*step; id++ {
-				count, _ := p.WithContext(ctx).Where(p.ID.Eq(id)).Count()
-				if count > 0 {
-					log.Printf("post %d already exists, skip", id)
-					continue
-				}
-				err := i.Persistence(ctx, id)
-				if err != nil {
-					log.Printf("persistence post %d failed: %v", id, err)
-					continue
-				}
-				log.Printf("persistence post %d success", id)
-			}
-		}(j)
+	find, err := p.WithContext(ctx).
+		Select(p.ID).
+		Where(p.ID.Gte(startId), p.ID.Lt(endId)).
+		Find()
+	if err != nil {
+		return errors.Wrap(err, "find post failed")
 	}
-	wg.Wait()
-	return nil
+	idSet := make(map[int64]struct{})
+	for _, post := range find {
+		idSet[post.ID] = struct{}{}
+	}
+	log.Printf("found %d posts have been persisted", len(idSet))
+
+	// 找出未持久化的帖子
+	ids := make([]int64, 0, endId-startId)
+	for id := startId; id < endId; id++ {
+		if _, ok := idSet[id]; !ok {
+			ids = append(ids, id)
+		}
+	}
+	log.Printf("found %d posts need to persistence", len(ids))
+
+	return i.BatchPersistenceIds(ctx, ids, goroutine)
 }
 
-// BatchPersistence 批量持久化帖子
-func (i *Indexer) BatchPersistence(ctx context.Context, startId, endId int64, goroutine int) error {
-	wg := sync.WaitGroup{}
-	wg.Add(goroutine)
-
+// BatchPersistenceRange 根据 ID 范围批量持久化帖子
+func (i *Indexer) BatchPersistenceRange(ctx context.Context, startId, endId int64, goroutine int) error {
 	ids := make([]int64, 0, endId-startId)
 	for id := startId; id < endId; id++ {
 		ids = append(ids, id)
 	}
-	chunks := lo.Chunk(ids, goroutine)
 
-	for j := 0; j < goroutine; j++ {
-		chunk := chunks[j]
+	return i.BatchPersistenceIds(ctx, ids, goroutine)
+}
+
+// BatchPersistenceIds 根据 ID 批量持久化帖子
+func (i *Indexer) BatchPersistenceIds(ctx context.Context, ids []int64, goroutine int) error {
+	if len(ids) == 0 {
+		return nil
+	}
+
+	wg := sync.WaitGroup{}
+	size := int(math.Ceil(float64(len(ids)) / float64(goroutine)))
+	chunks := lo.Chunk(ids, size)
+	log.Printf("split %d ids into %d chunks", len(ids), len(chunks))
+
+	for j, chunk := range chunks {
 		if len(chunk) == 0 {
 			log.Printf("chunk %d is empty", j)
 			wg.Done()
 			continue
 		}
+		wg.Add(1)
 		go func(j int) {
 			failedCount := 0
 			successCount := 0
