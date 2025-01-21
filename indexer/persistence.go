@@ -9,6 +9,38 @@ import (
 	"sync"
 )
 
+// BatchPersistenceIfNotExist 批量持久化帖子，如果帖子不存在
+func (i *Indexer) BatchPersistenceIfNotExist(ctx context.Context, startId, endId int64, goroutine int) error {
+	p := i.SvcCtx.Query.PostResp
+	wg := sync.WaitGroup{}
+	wg.Add(goroutine)
+	step := (endId - startId) / int64(goroutine)
+	for j := 0; j < goroutine; j++ {
+		go func(j int) {
+			log.Printf("goroutine %d start", j)
+			defer func() {
+				wg.Done()
+				log.Printf("goroutine %d end", j)
+			}()
+			for id := startId + int64(j)*step; id < startId+int64(j+1)*step; id++ {
+				count, _ := p.WithContext(ctx).Where(p.ID.Eq(id)).Count()
+				if count > 0 {
+					log.Printf("post %d already exists, skip", id)
+					continue
+				}
+				err := i.Persistence(ctx, id)
+				if err != nil {
+					log.Printf("persistence post %d failed: %v", id, err)
+					continue
+				}
+				log.Printf("persistence post %d success", id)
+			}
+		}(j)
+	}
+	wg.Wait()
+	return nil
+}
+
 // BatchPersistence 批量持久化帖子
 func (i *Indexer) BatchPersistence(ctx context.Context, startId, endId int64, goroutine int) error {
 	wg := sync.WaitGroup{}
