@@ -9,6 +9,14 @@ import (
 	"log"
 	"math"
 	"sync"
+	"sync/atomic"
+	"time"
+)
+
+var (
+	Mutex         = sync.Mutex{}
+	PostCount     = atomic.Int64{}
+	LastPrintTime = time.Now()
 )
 
 // BatchPersistenceRangeIfNotExist 批量持久化帖子，如果帖子不存在
@@ -80,14 +88,13 @@ func (i *Indexer) BatchPersistenceIds(ctx context.Context, ids []int64, goroutin
 				log.Printf("goroutine %d end, success: %d, failed: %d", j, successCount, failedCount)
 			}()
 
-			for k, id := range chunk {
+			for _, id := range chunk {
 				err := i.Persistence(ctx, id)
 				if err != nil {
 					log.Printf("persistence post %d failed: %v", id, err)
 					failedCount++
 					continue
 				}
-				log.Printf("persistence post %d success, progress: %d/%d", id, k+1, len(chunk))
 				successCount++
 			}
 		}(j)
@@ -103,6 +110,16 @@ func (i *Indexer) Persistence(ctx context.Context, id int64) error {
 	postResp, err := GetPostInfo(id)
 	if err != nil {
 		return errors.Wrap(err, "get post info failed")
+	}
+
+	PostCount.Add(1)
+	if Mutex.TryLock() {
+		if time.Since(LastPrintTime) > time.Second {
+			log.Printf("QPS: %d", PostCount.Load())
+			LastPrintTime = time.Now()
+			PostCount.Store(0)
+		}
+		Mutex.Unlock()
 	}
 
 	var data = []byte("null")
