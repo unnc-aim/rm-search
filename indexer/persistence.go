@@ -25,6 +25,7 @@ func (i *Indexer) BatchPersistence(ctx context.Context, startId, endId int64, go
 				err := i.Persistence(ctx, id)
 				if err != nil {
 					log.Printf("persistence post %d failed: %v", id, err)
+					continue
 				}
 				log.Printf("persistence post %d success", id)
 			}
