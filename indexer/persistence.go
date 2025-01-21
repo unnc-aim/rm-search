@@ -54,19 +54,33 @@ func (i *Indexer) BatchPersistence(ctx context.Context, startId, endId int64, go
 	chunks := lo.Chunk(ids, goroutine)
 
 	for j := 0; j < goroutine; j++ {
+		chunk := chunks[j]
+		if len(chunk) == 0 {
+			log.Printf("chunk %d is empty", j)
+			wg.Done()
+			continue
+		}
 		go func(j int) {
-			log.Printf("goroutine %d start", j)
+			failedCount := 0
+			successCount := 0
+			_startId := chunk[0]
+			_endId := chunk[len(chunk)-1]
+			log.Printf("goroutine %d start, [%d, %d), len: %d", j, _startId, _endId, len(chunk))
+
 			defer func() {
 				wg.Done()
-				log.Printf("goroutine %d end", j)
+				log.Printf("goroutine %d end, success: %d, failed: %d", j, successCount, failedCount)
 			}()
-			for _, id := range chunks[j] {
+
+			for _, id := range chunk {
 				err := i.Persistence(ctx, id)
 				if err != nil {
 					log.Printf("persistence post %d failed: %v", id, err)
+					failedCount++
 					continue
 				}
 				log.Printf("persistence post %d success", id)
+				successCount++
 			}
 		}(j)
 	}
