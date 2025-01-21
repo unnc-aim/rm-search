@@ -80,14 +80,14 @@ func (i *Indexer) BatchPersistenceIds(ctx context.Context, ids []int64, goroutin
 				log.Printf("goroutine %d end, success: %d, failed: %d", j, successCount, failedCount)
 			}()
 
-			for _, id := range chunk {
+			for k, id := range chunk {
 				err := i.Persistence(ctx, id)
 				if err != nil {
 					log.Printf("persistence post %d failed: %v", id, err)
 					failedCount++
 					continue
 				}
-				log.Printf("persistence post %d success", id)
+				log.Printf("persistence post %d success, progress: %d/%d", id, k+1, len(chunk))
 				successCount++
 			}
 		}(j)
