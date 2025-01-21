@@ -5,16 +5,32 @@ import (
 	"encoding/json"
 	"github.com/pkg/errors"
 	"github.com/scutrobotlab/bbs-search/database/model"
+	"log"
+	"sync"
 )
 
 // BatchPersistence 批量持久化帖子
-func (i *Indexer) BatchPersistence(ctx context.Context, startId, endId int64) error {
-	for id := startId; id < endId; id++ {
-		err := i.Persistence(ctx, id)
-		if err != nil {
-			return errors.Wrapf(err, "persistence id %d failed", id)
-		}
+func (i *Indexer) BatchPersistence(ctx context.Context, startId, endId int64, goroutine int) error {
+	wg := sync.WaitGroup{}
+	wg.Add(goroutine)
+	step := (endId - startId) / int64(goroutine)
+	for j := 0; j < goroutine; j++ {
+		go func(j int) {
+			log.Printf("goroutine %d start", j)
+			defer func() {
+				wg.Done()
+				log.Printf("goroutine %d end", j)
+			}()
+			for id := startId + int64(j)*step; id < startId+int64(j+1)*step; id++ {
+				err := i.Persistence(ctx, id)
+				if err != nil {
+					log.Printf("persistence post %d failed: %v", id, err)
+				}
+				log.Printf("persistence post %d success", id)
+			}
+		}(j)
 	}
+	wg.Wait()
 	return nil
 }
 
