@@ -12,5 +12,7 @@ CREATE TABLE IF NOT EXISTS `post_resp`
     `create_time` timestamp(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `update_time` timestamp(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    KEY `idx_code` (`code`)
+    KEY `idx_code` (`code`),
+    KEY `idx_create_time` (`create_time`),
+    KEY `idx_update_time` (`update_time`)
 ) COMMENT '帖子响应';
