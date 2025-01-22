@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/scutrobotlab/bbs-search/database/query"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -25,5 +26,20 @@ func WithDb() Option {
 		}
 		c.Db = db
 		c.Query = query.Use(db)
+	}
+}
+
+func WithElastic() Option {
+	return func(c *Context) {
+		var Addresses = []string{"http://localhost:9200"}
+		elastic, err := elasticsearch.NewClient(elasticsearch.Config{
+			Addresses: Addresses,
+			Username:  "elastic",
+			Password:  "elastic",
+		})
+		if err != nil {
+			panic(err)
+		}
+		c.Elastic = elastic
 	}
 }
