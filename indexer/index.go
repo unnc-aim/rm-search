@@ -10,10 +10,10 @@ import (
 )
 
 // IndexDoc 索引文档
-func (i *Indexer) IndexDoc(id int64, str string) error {
+func (i *Indexer) IndexDoc(id int64, doc []byte) error {
 	elastic := i.SvcCtx.Elastic
 	docId := strconv.FormatInt(id, 10)
-	resp, err := elastic.Index(common.PostInfoIndex, bytes.NewBuffer([]byte(str)), elastic.Index.WithDocumentID(docId))
+	resp, err := elastic.Index(common.PostInfoIndex, bytes.NewBuffer(doc), elastic.Index.WithDocumentID(docId))
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,13 @@ func (i *Indexer) ScrollAndIndex(ctx context.Context, startId, endId int64) (int
 		}
 
 		for _, post := range posts {
-			if err = i.IndexDoc(post.ID, post.Data); err != nil {
+			id := post.ID
+			doc, err := ConvertPostInfo([]byte(post.Data))
+			if err != nil {
+				log.Printf("convert post failed, id: %d, err: %v", post.ID, err)
+				continue
+			}
+			if err = i.IndexDoc(id, doc); err != nil {
 				log.Printf("index post failed, id: %d, err: %v", post.ID, err)
 				continue
 			}
