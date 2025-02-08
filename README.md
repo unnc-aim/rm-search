@@ -1,3 +1,3 @@
-# BBS Search
+# RM Search
 
-A search service for RoboMaster BBS.
+A search service for RoboMaster.
