@@ -12,18 +12,10 @@
         "analyzer": "ik_max_word",
         "search_analyzer": "ik_smart"
       },
-      "title_analyzed": {
-        "type": "text",
-        "analyzer": "whitespace"
-      },
       "content": {
         "type": "text",
         "analyzer": "ik_max_word",
         "search_analyzer": "ik_smart"
-      },
-      "content_analyzed": {
-        "type": "text",
-        "analyzer": "whitespace"
       },
       "bbs_post": {
         "properties": {
