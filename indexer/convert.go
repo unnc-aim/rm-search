@@ -3,7 +3,7 @@ package indexer
 import (
 	"encoding/json"
 	"github.com/scutrobotlab/rm-search/common"
-	"log"
+	"github.com/sirupsen/logrus"
 )
 
 // ConvertBbsPost 转换 BbsPost 信息
@@ -19,7 +19,7 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 	case common.BbsPostContentTypeMarkdown:
 		// TODO: convert Markdown to plain text
 	default:
-		log.Printf("unknown content type: %s", post.ContentType)
+		logrus.Errorf("unknown content type: %s", post.ContentType)
 	}
 
 	return json.Marshal(IndexEntity{

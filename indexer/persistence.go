@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"github.com/scutrobotlab/rm-search/database/model"
-	"log"
+	"github.com/sirupsen/logrus"
 	"math"
 	"sync"
 	"sync/atomic"
@@ -34,7 +34,7 @@ func (i *Indexer) BatchPersistenceRangeIfNotExist(ctx context.Context, startId, 
 	for _, post := range find {
 		idSet[post.ID] = struct{}{}
 	}
-	log.Printf("found %d posts have been persisted", len(idSet))
+	logrus.Infof("found %d posts have been persisted", len(idSet))
 
 	// 找出未持久化的帖子
 	ids := make([]int64, 0, endId-startId)
@@ -43,7 +43,7 @@ func (i *Indexer) BatchPersistenceRangeIfNotExist(ctx context.Context, startId, 
 			ids = append(ids, id)
 		}
 	}
-	log.Printf("found %d posts need to persistence", len(ids))
+	logrus.Infof("found %d posts need to persistence", len(ids))
 
 	return i.BatchPersistenceIds(ctx, ids, goroutine)
 }
@@ -67,11 +67,11 @@ func (i *Indexer) BatchPersistenceIds(ctx context.Context, ids []int64, goroutin
 	wg := sync.WaitGroup{}
 	size := int(math.Ceil(float64(len(ids)) / float64(goroutine)))
 	chunks := lo.Chunk(ids, size)
-	log.Printf("split %d ids into %d chunks", len(ids), len(chunks))
+	logrus.Infof("split %d ids into %d chunks", len(ids), len(chunks))
 
 	for j, chunk := range chunks {
 		if len(chunk) == 0 {
-			log.Printf("chunk %d is empty", j)
+			logrus.Infof("chunk %d is empty", j)
 			wg.Done()
 			continue
 		}
@@ -81,20 +81,20 @@ func (i *Indexer) BatchPersistenceIds(ctx context.Context, ids []int64, goroutin
 			successCount := 0
 			_startId := chunk[0]
 			_endId := chunk[len(chunk)-1]
-			log.Printf("goroutine %d start, [%d, %d), len: %d", j, _startId, _endId, len(chunk))
+			logrus.Infof("goroutine %d start, [%d, %d), len: %d", j, _startId, _endId, len(chunk))
 
 			defer func() {
 				wg.Done()
-				log.Printf("goroutine %d end, success: %d, failed: %d", j, successCount, failedCount)
+				logrus.Infof("goroutine %d end, success: %d, failed: %d", j, successCount, failedCount)
 			}()
 
 			for _, id := range chunk {
 				err := i.Persistence(ctx, id)
 				if err != nil {
-					log.Printf("persistence post %d failed: %v", id, err)
+					logrus.Errorf("persistence post %d failed: %v", id, err)
 					failedCount++
 					if errors.Is(err, ErrStatusMethodNotAllowed) {
-						log.Printf("get post %d failed: %v, break", id, err)
+						logrus.Errorf("get post %d failed: %v, break", id, err)
 						break
 					}
 					continue
@@ -119,7 +119,7 @@ func (i *Indexer) Persistence(ctx context.Context, id int64) error {
 	PostCount.Add(1)
 	if Mutex.TryLock() {
 		if time.Since(LastPrintTime) > time.Second {
-			log.Printf("QPS: %d", PostCount.Load())
+			logrus.Infof("QPS: %d", PostCount.Load())
 			LastPrintTime = time.Now()
 			PostCount.Store(0)
 		}

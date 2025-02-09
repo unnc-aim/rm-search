@@ -5,7 +5,7 @@ import (
 	"context"
 	"github.com/pkg/errors"
 	"github.com/scutrobotlab/rm-search/common"
-	"log"
+	"github.com/sirupsen/logrus"
 )
 
 // IndexDoc 索引文档
@@ -45,18 +45,18 @@ func (i *Indexer) ScrollAndIndexBbsPost(ctx context.Context, startId, endId int6
 			id := GetEntityId(EntityTypeBbsPost, post.ID)
 			doc, err := ConvertBbsPost(id, []byte(post.Data))
 			if err != nil {
-				log.Printf("convert post failed, id: %d, err: %v", post.ID, err)
+				logrus.Errorf("convert post failed, id: %d, err: %v", post.ID, err)
 				continue
 			}
 			if err = i.IndexDoc(id, doc); err != nil {
-				log.Printf("index post failed, id: %d, err: %v", post.ID, err)
+				logrus.Errorf("index post failed, id: %d, err: %v", post.ID, err)
 				continue
 			}
 			successCount++
 		}
 
 		offset = posts[len(posts)-1].ID + 1
-		log.Printf("index %d posts, next offset: %d", len(posts), offset)
+		logrus.Infof("index %d posts, next offset: %d", len(posts), offset)
 	}
 
 	return successCount, nil
