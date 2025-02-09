@@ -6,14 +6,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/scutrobotlab/rm-search/common"
 	"log"
-	"strconv"
 )
 
 // IndexDoc 索引文档
-func (i *Indexer) IndexDoc(id int64, doc []byte) error {
+func (i *Indexer) IndexDoc(id string, doc []byte) error {
 	elastic := i.SvcCtx.Elastic
-	docId := strconv.FormatInt(id, 10)
-	resp, err := elastic.Index(common.IndexEntityName, bytes.NewBuffer(doc), elastic.Index.WithDocumentID(docId))
+	resp, err := elastic.Index(common.IndexEntityName, bytes.NewBuffer(doc), elastic.Index.WithDocumentID(id))
 	if err != nil {
 		return err
 	}
@@ -44,8 +42,8 @@ func (i *Indexer) ScrollAndIndexBbsPost(ctx context.Context, startId, endId int6
 		}
 
 		for _, post := range posts {
-			id := post.ID
-			doc, err := ConvertBbsPost([]byte(post.Data))
+			id := GetEntityId(EntityTypeBbsPost, post.ID)
+			doc, err := ConvertBbsPost(id, []byte(post.Data))
 			if err != nil {
 				log.Printf("convert post failed, id: %d, err: %v", post.ID, err)
 				continue

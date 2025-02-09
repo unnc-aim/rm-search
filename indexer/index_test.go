@@ -3,7 +3,6 @@ package indexer
 import (
 	"context"
 	"github.com/scutrobotlab/rm-search/service"
-	"math"
 	"testing"
 )
 
@@ -12,7 +11,7 @@ func TestIndexer_ScrollAndIndex(t *testing.T) {
 	svcCtx := service.NewContextForTest(service.WithDb(), service.WithElastic())
 	idx := NewIndexer(svcCtx)
 
-	count, err := idx.ScrollAndIndexBbsPost(ctx, 1, math.MaxInt64)
+	count, err := idx.ScrollAndIndexBbsPost(ctx, 1, 1000)
 	if err != nil {
 		t.Fatal(err)
 	}
