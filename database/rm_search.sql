@@ -2,7 +2,7 @@ CREATE DATABASE IF NOT EXISTS rm_search;
 
 USE rm_search;
 
-CREATE TABLE IF NOT EXISTS `post_resp`
+CREATE TABLE IF NOT EXISTS `bbs_post`
 (
     `id`          bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '帖子ID',
     `code`        int             NOT NULL DEFAULT 0 COMMENT '状态码',
@@ -15,4 +15,4 @@ CREATE TABLE IF NOT EXISTS `post_resp`
     KEY `idx_code` (`code`),
     KEY `idx_create_time` (`create_time`),
     KEY `idx_update_time` (`update_time`)
-) COMMENT '帖子响应';
+) COMMENT '论坛帖子';

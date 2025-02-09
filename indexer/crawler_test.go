@@ -9,7 +9,7 @@ func TestGetPostInfo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetPostInfo error: %v", err)
 	}
-	t.Logf("PostInfo: %+v", post)
+	t.Logf("BbsPost: %+v", post)
 }
 
 func TestGetPostInfo2(t *testing.T) {
@@ -20,7 +20,7 @@ func TestGetPostInfo2(t *testing.T) {
 		if err != nil {
 			t.Fatalf("GetPostInfo error: %v", err)
 		}
-		t.Logf("[%d] PostInfo: %+v", i, post)
+		t.Logf("[%d] BbsPost: %+v", i, post)
 		if post.Data != nil {
 			t.Logf("Data: %+v", post.Data)
 		}

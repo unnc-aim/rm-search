@@ -8,10 +8,10 @@ import (
 	"time"
 )
 
-const TableNamePostResp = "post_resp"
+const TableNameBbsPost = "bbs_post"
 
-// PostResp mapped from table <post_resp>
-type PostResp struct {
+// BbsPost mapped from table <bbs_post>
+type BbsPost struct {
 	ID         int64     `gorm:"column:id;type:bigint unsigned;primaryKey;autoIncrement:true;comment:帖子ID" json:"id"`                                                         // 帖子ID
 	Code       int32     `gorm:"column:code;type:int;not null;index:idx_code,priority:1;comment:状态码" json:"code"`                                                             // 状态码
 	Message    string    `gorm:"column:message;type:varchar(255);not null;comment:状态信息" json:"message"`                                                                       // 状态信息
@@ -21,7 +21,7 @@ type PostResp struct {
 	UpdateTime time.Time `gorm:"column:update_time;type:timestamp(3);not null;index:idx_update_time,priority:1;default:CURRENT_TIMESTAMP(3);comment:更新时间" json:"update_time"` // 更新时间
 }
 
-// TableName PostResp's table name
-func (*PostResp) TableName() string {
-	return TableNamePostResp
+// TableName BbsPost's table name
+func (*BbsPost) TableName() string {
+	return TableNameBbsPost
 }

@@ -16,34 +16,34 @@ import (
 )
 
 var (
-	Q        = new(Query)
-	PostResp *postResp
+	Q       = new(Query)
+	BbsPost *bbsPost
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
-	PostResp = &Q.PostResp
+	BbsPost = &Q.BbsPost
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:       db,
-		PostResp: newPostResp(db, opts...),
+		db:      db,
+		BbsPost: newBbsPost(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	PostResp postResp
+	BbsPost bbsPost
 }
 
 func (q *Query) Available() bool { return q.db != nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:       db,
-		PostResp: q.PostResp.clone(db),
+		db:      db,
+		BbsPost: q.BbsPost.clone(db),
 	}
 }
 
@@ -57,18 +57,18 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:       db,
-		PostResp: q.PostResp.replaceDB(db),
+		db:      db,
+		BbsPost: q.BbsPost.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	PostResp IPostRespDo
+	BbsPost IBbsPostDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		PostResp: q.PostResp.WithContext(ctx),
+		BbsPost: q.BbsPost.WithContext(ctx),
 	}
 }
 

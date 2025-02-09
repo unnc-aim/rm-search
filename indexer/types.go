@@ -9,7 +9,7 @@ type RestResp[T any] struct {
 	Data    *T     `json:"data,omitempty"`
 }
 
-type PostInfo struct {
+type BbsPost struct {
 	Id                int64        `json:"id"`
 	Category          string       `json:"category"`
 	State             string       `json:"state"`

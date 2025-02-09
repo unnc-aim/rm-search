@@ -13,7 +13,7 @@ import (
 func (i *Indexer) IndexDoc(id int64, doc []byte) error {
 	elastic := i.SvcCtx.Elastic
 	docId := strconv.FormatInt(id, 10)
-	resp, err := elastic.Index(common.PostInfoIndex, bytes.NewBuffer(doc), elastic.Index.WithDocumentID(docId))
+	resp, err := elastic.Index(common.IndexEntityName, bytes.NewBuffer(doc), elastic.Index.WithDocumentID(docId))
 	if err != nil {
 		return err
 	}
@@ -23,7 +23,7 @@ func (i *Indexer) IndexDoc(id int64, doc []byte) error {
 }
 
 func (i *Indexer) ScrollAndIndex(ctx context.Context, startId, endId int64) (int64, error) {
-	p := i.SvcCtx.Query.PostResp
+	p := i.SvcCtx.Query.BbsPost
 
 	const PageSize = 1000
 	successCount := int64(0)

@@ -22,7 +22,7 @@ var (
 // BatchPersistenceRangeIfNotExist 批量持久化帖子，如果帖子不存在
 func (i *Indexer) BatchPersistenceRangeIfNotExist(ctx context.Context, startId, endId int64, goroutine int) error {
 	// 查询已经持久化的帖子
-	p := i.SvcCtx.Query.PostResp
+	p := i.SvcCtx.Query.BbsPost
 	find, err := p.WithContext(ctx).
 		Select(p.ID).
 		Where(p.ID.Gte(startId), p.ID.Lt(endId)).
@@ -110,7 +110,7 @@ func (i *Indexer) BatchPersistenceIds(ctx context.Context, ids []int64, goroutin
 
 // Persistence 持久化帖子
 func (i *Indexer) Persistence(ctx context.Context, id int64) error {
-	p := i.SvcCtx.Query.PostResp
+	p := i.SvcCtx.Query.BbsPost
 	postResp, err := GetPostInfo(id)
 	if err != nil {
 		return errors.Wrap(err, "get post info failed")
@@ -133,7 +133,7 @@ func (i *Indexer) Persistence(ctx context.Context, id int64) error {
 			return errors.Wrap(err, "marshal post data failed")
 		}
 	}
-	postRespDb := model.PostResp{
+	postRespDb := model.BbsPost{
 		ID:      id,
 		Code:    postResp.Code,
 		Message: postResp.Message,

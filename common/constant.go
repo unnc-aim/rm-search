@@ -1,3 +1,3 @@
 package common
 
-const PostInfoIndex = "post-info"
+const IndexEntityName = "rm-search"

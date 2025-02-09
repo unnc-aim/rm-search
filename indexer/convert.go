@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 )
 
-// ConvertPostInfo 转换 PostInfo 信息
+// ConvertPostInfo 转换 BbsPost 信息
 func ConvertPostInfo(src []byte) ([]byte, error) {
-	var doc PostInfo
+	var doc BbsPost
 	if err := json.Unmarshal(src, &doc); err != nil {
 		return nil, err
 	}
