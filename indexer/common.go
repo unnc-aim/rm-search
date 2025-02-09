@@ -1,6 +1,6 @@
 package indexer
 
-import "github.com/scutrobotlab/bbs-search/service"
+import "github.com/scutrobotlab/rm-search/service"
 
 type Indexer struct {
 	SvcCtx *service.Context

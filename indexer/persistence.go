@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"github.com/scutrobotlab/bbs-search/database/model"
+	"github.com/scutrobotlab/rm-search/database/model"
 	"log"
 	"math"
 	"sync"

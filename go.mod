@@ -1,4 +1,4 @@
-module github.com/scutrobotlab/bbs-search
+module github.com/scutrobotlab/rm-search
 
 go 1.23
 

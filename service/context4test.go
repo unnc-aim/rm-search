@@ -2,7 +2,7 @@ package service
 
 import (
 	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/scutrobotlab/bbs-search/database/query"
+	"github.com/scutrobotlab/rm-search/database/query"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )

@@ -2,7 +2,7 @@ package indexer
 
 import (
 	"context"
-	"github.com/scutrobotlab/bbs-search/service"
+	"github.com/scutrobotlab/rm-search/service"
 	"testing"
 )
 

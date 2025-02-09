@@ -16,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/scutrobotlab/bbs-search/database/model"
+	"github.com/scutrobotlab/rm-search/database/model"
 )
 
 func newPostResp(db *gorm.DB, opts ...gen.DOOption) postResp {

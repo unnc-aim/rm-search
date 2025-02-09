@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"github.com/pkg/errors"
-	"github.com/scutrobotlab/bbs-search/common"
+	"github.com/scutrobotlab/rm-search/common"
 	"log"
 	"strconv"
 )
