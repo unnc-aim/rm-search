@@ -13,11 +13,19 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 		return nil, err
 	}
 
+	var content string
+	var err error
 	switch post.ContentType {
 	case common.BbsPostContentTypeHTML:
-		// TODO: convert HTML to plain text
+		content, err = common.HTMLToText(post.HtmlContent)
+		if err != nil {
+			logrus.Errorf("failed to convert HTML to text: %v", err)
+		}
 	case common.BbsPostContentTypeMarkdown:
-		// TODO: convert Markdown to plain text
+		content, err = common.MarkdownToText(post.MarkdownContent)
+		if err != nil {
+			logrus.Errorf("failed to convert markdown to text: %v", err)
+		}
 	default:
 		logrus.Errorf("unknown content type: %s", post.ContentType)
 	}
@@ -26,7 +34,7 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 		Id:      id,
 		Type:    EntityTypeBbsPost,
 		Title:   post.Title,
-		Content: "",
+		Content: content,
 		BbsPost: &post,
 	})
 }

@@ -9,6 +9,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/samber/lo v1.47.0
 	github.com/sirupsen/logrus v1.9.3
+	golang.org/x/net v0.25.0
 	gorm.io/driver/mysql v1.5.2
 	gorm.io/gen v0.3.23
 	gorm.io/gorm v1.25.5
@@ -22,6 +23,7 @@ require (
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	go.opentelemetry.io/otel v1.28.0 // indirect
 	go.opentelemetry.io/otel/metric v1.28.0 // indirect
 	go.opentelemetry.io/otel/trace v1.28.0 // indirect
