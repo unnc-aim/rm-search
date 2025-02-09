@@ -9,7 +9,6 @@
       },
       "title": {
         "type": "text",
-        "keyword": "title.keyword",
         "fields": {
           "keyword": {
             "type": "keyword",

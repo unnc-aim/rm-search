@@ -28,6 +28,9 @@ func (i *Indexer) CreateIndex() (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return "", errors.Errorf("create index failed, status code: %d", resp.StatusCode)
+	}
 
 	// 创建别名
 	resp, err = elastic.Indices.PutAlias([]string{index}, common.IndexEntityName)
@@ -35,6 +38,9 @@ func (i *Indexer) CreateIndex() (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return "", errors.Errorf("create alias failed, status code: %d", resp.StatusCode)
+	}
 
 	return index, nil
 }
