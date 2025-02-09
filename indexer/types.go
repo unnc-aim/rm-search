@@ -1,6 +1,6 @@
 package indexer
 
-type PostInfoResp RestResp[any]
+type BbsPostResp RestResp[any]
 
 type RestResp[T any] struct {
 	Code    int32  `json:"code"`

@@ -11,8 +11,8 @@ var (
 	ErrStatusMethodNotAllowed = errors.New("status code: 405")
 )
 
-// GetPostInfo 获取帖子信息
-func GetPostInfo(id int64) (ret *PostInfoResp, err error) {
+// GetBbsPost 获取帖子信息
+func GetBbsPost(id int64) (ret *BbsPostResp, err error) {
 	url := fmt.Sprintf("https://bbs.robomaster.com/developers-server/rest/posts/info/%d", id)
 	resp, err := http.Post(url, "", nil)
 	if err != nil {

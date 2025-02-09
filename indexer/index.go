@@ -22,7 +22,7 @@ func (i *Indexer) IndexDoc(id int64, doc []byte) error {
 	return nil
 }
 
-func (i *Indexer) ScrollAndIndex(ctx context.Context, startId, endId int64) (int64, error) {
+func (i *Indexer) ScrollAndIndexBbsPost(ctx context.Context, startId, endId int64) (int64, error) {
 	p := i.SvcCtx.Query.BbsPost
 
 	const PageSize = 1000
@@ -45,7 +45,7 @@ func (i *Indexer) ScrollAndIndex(ctx context.Context, startId, endId int64) (int
 
 		for _, post := range posts {
 			id := post.ID
-			doc, err := ConvertPostInfo([]byte(post.Data))
+			doc, err := ConvertBbsPost([]byte(post.Data))
 			if err != nil {
 				log.Printf("convert post failed, id: %d, err: %v", post.ID, err)
 				continue

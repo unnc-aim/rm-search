@@ -111,7 +111,7 @@ func (i *Indexer) BatchPersistenceIds(ctx context.Context, ids []int64, goroutin
 // Persistence 持久化帖子
 func (i *Indexer) Persistence(ctx context.Context, id int64) error {
 	p := i.SvcCtx.Query.BbsPost
-	postResp, err := GetPostInfo(id)
+	postResp, err := GetBbsPost(id)
 	if err != nil {
 		return errors.Wrap(err, "get post info failed")
 	}
