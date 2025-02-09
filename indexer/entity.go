@@ -11,12 +11,10 @@ const (
 )
 
 type BaseEntity struct {
-	Id              string `json:"id"`               // 主键
-	Type            string `json:"type"`             // 类型
-	Title           string `json:"title"`            // 标题
-	TitleAnalyzed   string `json:"title_analyzed"`   // 分词后的标题
-	Content         string `json:"content"`          // 内容
-	ContentAnalyzed string `json:"content_analyzed"` // 分词后的内容
+	Id      string `json:"id"`      // 主键
+	Type    string `json:"type"`    // 类型
+	Title   string `json:"title"`   // 标题
+	Content string `json:"content"` // 内容
 }
 
 type IndexEntity struct {
@@ -25,5 +23,5 @@ type IndexEntity struct {
 }
 
 func GetEntityId(entityType EntityType, id any) string {
-	return string(entityType) + "_" + fmt.Sprintf("%v", id)
+	return fmt.Sprintf("%s:%v", entityType, id)
 }

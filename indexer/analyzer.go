@@ -17,8 +17,8 @@ func AnalyzeWhitespace(text string) string {
 }
 
 func init() {
-	err := seg.LoadDict()
-	if err != nil {
-		panic(err)
-	}
+	//err := seg.LoadDict()
+	//if err != nil {
+	//	panic(err)
+	//}
 }

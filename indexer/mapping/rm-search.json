@@ -9,12 +9,8 @@
       },
       "title": {
         "type": "text",
-        "fields": {
-          "keyword": {
-            "type": "keyword",
-            "ignore_above": 256
-          }
-        }
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart"
       },
       "title_analyzed": {
         "type": "text",
@@ -22,7 +18,8 @@
       },
       "content": {
         "type": "text",
-        "index": false
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart"
       },
       "content_analyzed": {
         "type": "text",
