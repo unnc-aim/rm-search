@@ -11,7 +11,13 @@ func TestIndexer_ScrollAndIndex(t *testing.T) {
 	svcCtx := service.NewContextForTest(service.WithDb(), service.WithElastic())
 	idx := NewIndexer(svcCtx)
 
-	count, err := idx.ScrollAndIndexBbsPost(ctx, 1, 1_000_000)
+	index, err := idx.CreateIndex()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("index %s created", index)
+
+	count, err := idx.ScrollAndIndexBbsPost(ctx, index, 1, 1_000_000)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -3,15 +3,46 @@ package indexer
 import (
 	"bytes"
 	"context"
+	_ "embed"
+	"fmt"
+	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/pkg/errors"
 	"github.com/scutrobotlab/rm-search/common"
 	"github.com/sirupsen/logrus"
+	"time"
 )
 
-// IndexDoc 索引文档
-func (i *Indexer) IndexDoc(id string, doc []byte) error {
+//go:embed mapping/rm-search.json
+var mapping []byte
+
+// CreateIndex 创建索引
+func (i *Indexer) CreateIndex() (string, error) {
 	elastic := i.SvcCtx.Elastic
-	resp, err := elastic.Index(common.IndexEntityName, bytes.NewBuffer(doc), elastic.Index.WithDocumentID(id))
+	index := fmt.Sprintf("%s-%s", common.IndexEntityName, time.Now().Format("20060102-150405"))
+
+	// 创建索引
+	resp, err := elastic.Indices.Create(index, func(req *esapi.IndicesCreateRequest) {
+		req.Body = bytes.NewReader(mapping)
+	})
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	// 创建别名
+	resp, err = elastic.Indices.PutAlias([]string{index}, common.IndexEntityName)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	return index, nil
+}
+
+// IndexDoc 索引文档
+func (i *Indexer) IndexDoc(index string, id string, doc []byte) error {
+	elastic := i.SvcCtx.Elastic
+	resp, err := elastic.Index(index, bytes.NewBuffer(doc), elastic.Index.WithDocumentID(id))
 	if err != nil {
 		return err
 	}
@@ -20,7 +51,7 @@ func (i *Indexer) IndexDoc(id string, doc []byte) error {
 	return nil
 }
 
-func (i *Indexer) ScrollAndIndexBbsPost(ctx context.Context, startId, endId int64) (int64, error) {
+func (i *Indexer) ScrollAndIndexBbsPost(ctx context.Context, index string, startId, endId int64) (int64, error) {
 	p := i.SvcCtx.Query.BbsPost
 
 	const PageSize = 1000
@@ -48,7 +79,7 @@ func (i *Indexer) ScrollAndIndexBbsPost(ctx context.Context, startId, endId int6
 				logrus.Errorf("convert post failed, id: %d, err: %v", post.ID, err)
 				continue
 			}
-			if err = i.IndexDoc(id, doc); err != nil {
+			if err = i.IndexDoc(index, id, doc); err != nil {
 				logrus.Errorf("index post failed, id: %d, err: %v", post.ID, err)
 				continue
 			}
