@@ -23,3 +23,13 @@ func TestIndexer_ScrollAndIndex(t *testing.T) {
 	}
 	t.Logf("index %d posts", count)
 }
+
+func TestIndexer_DeleteUnusedIndices(t *testing.T) {
+	svcCtx := service.NewContextForTest(service.WithDb(), service.WithElastic())
+	idx := NewIndexer(svcCtx)
+
+	if err := idx.DeleteUnusedIndices(); err != nil {
+		t.Fatal(err)
+	}
+	t.Log("unused indices deleted")
+}

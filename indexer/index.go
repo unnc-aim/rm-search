@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"context"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/pkg/errors"
 	"github.com/scutrobotlab/rm-search/common"
 	"github.com/sirupsen/logrus"
+	"io"
+	"sort"
 	"time"
 )
 
@@ -43,6 +46,56 @@ func (i *Indexer) CreateIndex() (string, error) {
 	}
 
 	return index, nil
+}
+
+// DeleteUnusedIndices 删除未使用的索引
+func (i *Indexer) DeleteUnusedIndices() error {
+	elastic := i.SvcCtx.Elastic
+
+	// 只保留 rm-search 最新的索引
+	resp, err := elastic.Indices.GetAlias(elastic.Indices.GetAlias.WithName(common.IndexEntityName))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return errors.Errorf("get alias failed, status code: %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	var data map[string]interface{}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return err
+	}
+
+	var indices []string
+	for index := range data {
+		indices = append(indices, index)
+	}
+	if len(indices) <= 1 {
+		return nil
+	}
+
+	// 按照创建时间排序
+	sort.Strings(indices)
+
+	// 删除旧索引
+	for _, index := range indices[:len(indices)-1] {
+		_, err = elastic.Indices.Delete([]string{index})
+		if err != nil {
+			logrus.Errorf("delete index %s failed: %v", index, err)
+			continue
+		}
+		logrus.Infof("index %s deleted", index)
+	}
+	logrus.Infof("keep index %s", indices[len(indices)-1])
+
+	return nil
 }
 
 // IndexDoc 索引文档
