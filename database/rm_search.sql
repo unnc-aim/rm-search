@@ -1,6 +1,6 @@
-CREATE DATABASE IF NOT EXISTS bbs_search;
+CREATE DATABASE IF NOT EXISTS rm_search;
 
-USE bbs_search;
+USE rm_search;
 
 CREATE TABLE IF NOT EXISTS `post_resp`
 (

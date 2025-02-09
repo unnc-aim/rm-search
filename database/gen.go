@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const DSN = "root:123456@(localhost:3306)/bbs_search?charset=utf8mb4&parseTime=True&loc=Local"
+const DSN = "root:123456@(localhost:3306)/rm_search?charset=utf8mb4&parseTime=True&loc=Local"
 
 func main() {
 	g := gen.NewGenerator(gen.Config{

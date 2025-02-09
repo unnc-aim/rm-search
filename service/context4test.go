@@ -19,7 +19,7 @@ func NewContextForTest(options ...Option) *Context {
 
 func WithDb() Option {
 	return func(c *Context) {
-		const DataSource = "root:123456@(localhost:3306)/bbs_search?charset=utf8mb4&parseTime=True&loc=Local"
+		const DataSource = "root:123456@(localhost:3306)/rm_search?charset=utf8mb4&parseTime=True&loc=Local"
 		db, err := gorm.Open(mysql.Open(DataSource), &gorm.Config{})
 		if err != nil {
 			panic(err)
