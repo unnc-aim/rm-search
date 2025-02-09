@@ -10,12 +10,17 @@ const (
 	EntityTypeBbsPost = "bbs-post"
 )
 
-type IndexEntity struct {
-	Id      string `json:"id"`
-	Type    string `json:"type"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
+type BaseEntity struct {
+	Id              string `json:"id"`               // 主键
+	Type            string `json:"type"`             // 类型
+	Title           string `json:"title"`            // 标题
+	TitleAnalyzed   string `json:"title_analyzed"`   // 分词后的标题
+	Content         string `json:"content"`          // 内容
+	ContentAnalyzed string `json:"content_analyzed"` // 分词后的内容
+}
 
+type IndexEntity struct {
+	BaseEntity
 	BbsPost *BbsPost `json:"bbs_post,omitempty"`
 }
 

@@ -31,10 +31,14 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 	}
 
 	return json.Marshal(IndexEntity{
-		Id:      id,
-		Type:    EntityTypeBbsPost,
-		Title:   post.Title,
-		Content: content,
+		BaseEntity: BaseEntity{
+			Id:              id,
+			Type:            EntityTypeBbsPost,
+			Title:           post.Title,
+			TitleAnalyzed:   AnalyzeWhitespace(post.Title),
+			Content:         content,
+			ContentAnalyzed: AnalyzeWhitespace(content),
+		},
 		BbsPost: &post,
 	})
 }

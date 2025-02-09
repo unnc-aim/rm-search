@@ -9,11 +9,25 @@
       },
       "title": {
         "type": "text",
-        "analyzer": "standard"
+        "keyword": "title.keyword",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "title_analyzed": {
+        "type": "text",
+        "analyzer": "whitespace"
       },
       "content": {
         "type": "text",
-        "analyzer": "standard"
+        "index": false
+      },
+      "content_analyzed": {
+        "type": "text",
+        "analyzer": "whitespace"
       },
       "bbs_post": {
         "properties": {
