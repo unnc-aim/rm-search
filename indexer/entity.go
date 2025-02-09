@@ -11,8 +11,10 @@ const (
 )
 
 type IndexEntity struct {
-	Id   string `json:"id"`
-	Type string `json:"type"`
+	Id      string `json:"id"`
+	Type    string `json:"type"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
 
 	BbsPost *BbsPost `json:"bbs_post,omitempty"`
 }
