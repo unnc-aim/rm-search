@@ -7,6 +7,7 @@ toolchain go1.23.3
 require (
 	github.com/elastic/go-elasticsearch/v8 v8.17.0
 	github.com/pkg/errors v0.9.1
+	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/samber/lo v1.47.0
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/net v0.25.0
@@ -18,14 +19,11 @@ require (
 
 require (
 	github.com/elastic/elastic-transport-go/v8 v8.6.0 // indirect
-	github.com/go-ego/gse v0.80.3 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/vcaesar/cedar v0.20.2 // indirect
 	go.opentelemetry.io/otel v1.28.0 // indirect
 	go.opentelemetry.io/otel/metric v1.28.0 // indirect
 	go.opentelemetry.io/otel/trace v1.28.0 // indirect
