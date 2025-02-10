@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/scutrobotlab/rm-search/common"
 	"github.com/sirupsen/logrus"
 )
@@ -30,12 +31,26 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 		logrus.Errorf("unknown content type: %s", post.ContentType)
 	}
 
+	categoryLvl0 := make([]string, 0)
+	categoryLvl1 := make([]string, 0)
+	if len(post.Tags) == 0 {
+		categoryLvl0 = []string{"未分类"}
+		categoryLvl1 = []string{"未分类 > 未分类"}
+	} else {
+		for _, tag := range post.Tags {
+			categoryLvl0 = append(categoryLvl0, tag.GroupName)
+			categoryLvl1 = append(categoryLvl1, fmt.Sprintf("%s > %s", tag.GroupName, tag.Name))
+		}
+	}
+
 	return json.Marshal(IndexEntity{
 		BaseEntity: BaseEntity{
-			Id:      id,
-			Type:    EntityTypeBbsPost,
-			Title:   post.Title,
-			Content: content,
+			Id:           id,
+			Type:         EntityTypeBbsPost,
+			Title:        post.Title,
+			Content:      content,
+			CategoryLvl0: categoryLvl0,
+			CategoryLvl1: categoryLvl1,
 		},
 		BbsPost: &post,
 	})

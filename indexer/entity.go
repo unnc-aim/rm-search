@@ -11,10 +11,12 @@ const (
 )
 
 type BaseEntity struct {
-	Id      string `json:"id"`      // 主键
-	Type    string `json:"type"`    // 类型
-	Title   string `json:"title"`   // 标题
-	Content string `json:"content"` // 内容
+	Id           string   `json:"id"`            // 主键
+	Type         string   `json:"type"`          // 类型
+	Title        string   `json:"title"`         // 标题
+	Content      string   `json:"content"`       // 内容
+	CategoryLvl0 []string `json:"category_lvl0"` // 一级分类
+	CategoryLvl1 []string `json:"category_lvl1"` // 二级分类
 }
 
 type IndexEntity struct {
