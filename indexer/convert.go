@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/scutrobotlab/rm-search/common"
 	"github.com/sirupsen/logrus"
+	"strings"
 )
 
 // ConvertBbsPost 转换 BbsPost 信息
@@ -43,6 +44,14 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 		}
 	}
 
+	collectName := make([]string, 0)
+	if post.TeamInfo != nil {
+		collectName = append(collectName, strings.Split(post.TeamInfo.CollegeName, ";")...)
+	}
+	if len(collectName) == 0 {
+		collectName = []string{"未分类"}
+	}
+
 	return json.Marshal(IndexEntity{
 		BaseEntity: BaseEntity{
 			Id:           id,
@@ -51,6 +60,7 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 			Content:      content,
 			CategoryLvl0: categoryLvl0,
 			CategoryLvl1: categoryLvl1,
+			CollegeName:  collectName,
 		},
 		BbsPost: &post,
 	})

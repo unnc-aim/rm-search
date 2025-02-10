@@ -17,6 +17,7 @@ type BaseEntity struct {
 	Content      string   `json:"content"`       // 内容
 	CategoryLvl0 []string `json:"category_lvl0"` // 一级分类
 	CategoryLvl1 []string `json:"category_lvl1"` // 二级分类
+	CollegeName  []string `json:"college_name"`  // 学校名称
 }
 
 type IndexEntity struct {
