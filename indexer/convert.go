@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/scutrobotlab/rm-search/common"
 	"github.com/sirupsen/logrus"
+	"regexp"
 	"strings"
 )
 
@@ -14,6 +15,7 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 	if err := json.Unmarshal(src, &post); err != nil {
 		return nil, err
 	}
+	title := strings.TrimSpace(post.Title)
 
 	var content string
 	var err error
@@ -30,6 +32,16 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 		}
 	default:
 		logrus.Errorf("unknown content type: %s", post.ContentType)
+	}
+
+	// TODO: 从其他字段中提取赛季信息
+	var season string
+	regex := regexp.MustCompile(`RM(201[4-9]|202[0-6])`)
+	matches := regex.FindAllString(strings.ToUpper(title), -1)
+	if len(matches) > 0 {
+		season = matches[0]
+	} else {
+		season = "未分类"
 	}
 
 	categoryLvl0 := make([]string, 0)
@@ -49,6 +61,7 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 		collectName = append(collectName, strings.Split(post.TeamInfo.CollegeName, ";")...)
 	}
 	if len(collectName) == 0 {
+		// TODO: 从标题中分词提取学校名称
 		collectName = []string{"未分类"}
 	}
 
@@ -56,8 +69,9 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 		BaseEntity: BaseEntity{
 			Id:           id,
 			Type:         EntityTypeBbsPost,
-			Title:        post.Title,
+			Title:        title,
 			Content:      content,
+			Season:       season,
 			CategoryLvl0: categoryLvl0,
 			CategoryLvl1: categoryLvl1,
 			CollegeName:  collectName,

@@ -15,6 +15,7 @@ type BaseEntity struct {
 	Type         string   `json:"type"`          // 类型
 	Title        string   `json:"title"`         // 标题
 	Content      string   `json:"content"`       // 内容
+	Season       string   `json:"season"`        // 赛季
 	CategoryLvl0 []string `json:"category_lvl0"` // 一级分类
 	CategoryLvl1 []string `json:"category_lvl1"` // 二级分类
 	CollegeName  []string `json:"college_name"`  // 学校名称
