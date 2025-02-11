@@ -56,13 +56,13 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 		}
 	}
 
-	collectName := make([]string, 0)
+	collegeName := make([]string, 0)
 	if post.TeamInfo != nil {
-		collectName = append(collectName, strings.Split(post.TeamInfo.CollegeName, ";")...)
+		collegeName = append(collegeName, strings.Split(post.TeamInfo.CollegeName, ";")...)
 	}
-	if len(collectName) == 0 {
+	if len(collegeName) == 0 {
 		// TODO: 从标题中分词提取学校名称
-		collectName = []string{"未分类"}
+		collegeName = []string{"未分类"}
 	}
 
 	return json.Marshal(IndexEntity{
@@ -74,7 +74,7 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 			Season:       season,
 			CategoryLvl0: categoryLvl0,
 			CategoryLvl1: categoryLvl1,
-			CollegeName:  collectName,
+			CollegeName:  collegeName,
 		},
 		BbsPost: &post,
 	})
