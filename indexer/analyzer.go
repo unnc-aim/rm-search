@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-ego/gse"
 	"strings"
+	"unicode/utf8"
 )
 
 var Seg gse.Segmenter
@@ -33,6 +34,10 @@ func ExtractCollegeName(text string) []string {
 
 	var ret []string
 	for i, seg := range cut {
+		// 过滤掉长度小于3的片段
+		if utf8.RuneCountInString(seg) < 3 {
+			continue
+		}
 		for _, word := range schoolKeywords {
 			// 包含大学的片段和后缀
 			if strings.Contains(seg, word) {

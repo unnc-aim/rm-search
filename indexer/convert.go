@@ -59,9 +59,13 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 	collegeName := make([]string, 0)
 	if post.TeamInfo != nil {
 		collegeName = append(collegeName, strings.Split(post.TeamInfo.CollegeName, ";")...)
+	} else {
+		collegeName = ExtractCollegeName(title)
+		//if len(collegeName) > 0 {
+		//	logrus.Debugf("extracted college name %s from title %s", collegeName, title)
+		//}
 	}
 	if len(collegeName) == 0 {
-		// TODO: 从标题中分词提取学校名称
 		collegeName = []string{"未分类"}
 	}
 
