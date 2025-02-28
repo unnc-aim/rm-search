@@ -17,6 +17,10 @@
         "analyzer": "ik_max_word",
         "search_analyzer": "ik_smart"
       },
+      "image": {
+        "type": "keyword",
+        "index": false
+      },
       "season": {
         "type": "text",
         "fields": {

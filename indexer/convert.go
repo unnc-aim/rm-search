@@ -34,6 +34,21 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 		logrus.Errorf("unknown content type: %s", post.ContentType)
 	}
 
+	var image string
+	if post.HeadImg != nil && *post.HeadImg != "" {
+		type HeadImg []struct {
+			Alt string `json:"alt"`
+			Url string `json:"url"`
+		}
+		var headImg HeadImg
+		if err := json.Unmarshal([]byte(*post.HeadImg), &headImg); err != nil {
+			logrus.Debugf("failed to unmarshal head image: %s, err: %v", *post.HeadImg, err)
+		}
+		if len(headImg) > 0 {
+			image = headImg[0].Url
+		}
+	}
+
 	// TODO: 从其他字段中提取赛季信息
 	var season string
 	regex := regexp.MustCompile(`RM(201[4-9]|202[0-6])`)
@@ -75,6 +90,7 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 			Type:         EntityTypeBbsPost,
 			Title:        title,
 			Content:      content,
+			Image:        image,
 			Season:       season,
 			CategoryLvl0: categoryLvl0,
 			CategoryLvl1: categoryLvl1,
