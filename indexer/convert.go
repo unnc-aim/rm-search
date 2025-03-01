@@ -107,23 +107,32 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 		collegeName = []string{"未分类"}
 	}
 
+	var authorNickname string
+	var authorAvatar string
+	if post.AuthorNickname != nil {
+		authorNickname = *post.AuthorNickname
+	}
+	authorAvatar = post.AuthorAvatar
+
 	createTime := time.Time(post.CreateAt).UnixMilli()
 	updateTime := time.Time(post.UpdateAt).UnixMilli()
 
 	return json.Marshal(IndexEntity{
 		BaseEntity: BaseEntity{
-			Id:           id,
-			Type:         EntityTypeBbsPost,
-			Title:        title,
-			Content:      content,
-			Image:        image,
-			Url:          url,
-			Season:       season,
-			CategoryLvl0: categoryLvl0,
-			CategoryLvl1: categoryLvl1,
-			CollegeName:  collegeName,
-			CreateTime:   createTime,
-			UpdateTime:   updateTime,
+			Id:             id,
+			Type:           EntityTypeBbsPost,
+			Title:          title,
+			Content:        content,
+			Image:          image,
+			Url:            url,
+			Season:         season,
+			CategoryLvl0:   categoryLvl0,
+			CategoryLvl1:   categoryLvl1,
+			CollegeName:    collegeName,
+			AuthorNickname: authorNickname,
+			AuthorAvatar:   authorAvatar,
+			CreateTime:     createTime,
+			UpdateTime:     updateTime,
 		},
 		BbsPost: &post,
 	})

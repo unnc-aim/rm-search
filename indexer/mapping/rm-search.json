@@ -61,6 +61,19 @@
           }
         }
       },
+      "author_nickname": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "author_avatar": {
+        "type": "keyword",
+        "index": false
+      },
       "create_time": {
         "type": "date"
       },
