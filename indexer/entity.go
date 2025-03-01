@@ -30,8 +30,6 @@ type BaseEntity struct {
 
 type IndexEntity struct {
 	BaseEntity
-	BbsPost  *BbsPost  `json:"bbs_post,omitempty"`
-	Announce *Announce `json:"announce,omitempty"`
 }
 
 func GetEntityId(entityType EntityType, id any) string {

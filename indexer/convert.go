@@ -138,7 +138,6 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 			CreateTime:     createTime,
 			UpdateTime:     updateTime,
 		},
-		BbsPost: &post,
 	})
 }
 
@@ -180,6 +179,5 @@ func ConvertAnnounce(id string, src model.Announce) ([]byte, error) {
 			CreateTime:     date,
 			UpdateTime:     date,
 		},
-		Announce: &announce,
 	})
 }

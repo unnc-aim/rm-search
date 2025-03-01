@@ -7,7 +7,27 @@ import (
 )
 
 func TestIndexer_RecreateIndex(t *testing.T) {
-	TestIndexer_ScrollAndIndex(t)
+	ctx := context.Background()
+	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithElastic())
+	idx := NewIndexer(svcCtx)
+
+	index, err := idx.CreateIndex()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("index %s created", index)
+
+	count, err := idx.ScrollAndIndexBbsPost(ctx, index, 1, 1_000_000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("index %d posts", count)
+
+	count, err = idx.ScrollAndIndexAnnounce(ctx, index, 1, 2000)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	TestIndexer_DeleteUnusedIndices(t)
 }
 
