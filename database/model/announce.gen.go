@@ -14,10 +14,10 @@ const TableNameAnnounce = "announce"
 type Announce struct {
 	ID          int64     `gorm:"column:id;type:bigint unsigned;primaryKey;autoIncrement:true;comment:公告ID" json:"id"`                                                         // 公告ID
 	Found       bool      `gorm:"column:found;type:tinyint(1);not null;index:idx_found,priority:1;comment:是否找到" json:"found"`                                                  // 是否找到
-	Title       string    `gorm:"column:title;type:varchar(255);not null;index:idx_title,priority:1;comment:标题" json:"title"`                                                  // 标题
+	Title       string    `gorm:"column:title;type:varchar(255);not null;comment:标题" json:"title"`                                                                             // 标题
 	Date        time.Time `gorm:"column:date;type:date;not null;index:idx_date,priority:1;default:0001-01-01;comment:日期" json:"date"`                                          // 日期
-	Context     string    `gorm:"column:context;type:text;not null;comment:上下文" json:"context"`                                                                                // 上下文
-	Content     string    `gorm:"column:content;type:text;not null;comment:内容" json:"content"`                                                                                 // 内容
+	Context     string    `gorm:"column:context;type:mediumtext;not null;comment:上下文" json:"context"`                                                                          // 上下文
+	Content     string    `gorm:"column:content;type:mediumtext;not null;comment:内容" json:"content"`                                                                           // 内容
 	Attachments string    `gorm:"column:attachments;type:json;not null;comment:附件" json:"attachments"`                                                                         // 附件
 	CreateTime  time.Time `gorm:"column:create_time;type:timestamp(3);not null;index:idx_create_time,priority:1;default:CURRENT_TIMESTAMP(3);comment:创建时间" json:"create_time"` // 创建时间
 	UpdateTime  time.Time `gorm:"column:update_time;type:timestamp(3);not null;index:idx_update_time,priority:1;default:CURRENT_TIMESTAMP(3);comment:更新时间" json:"update_time"` // 更新时间

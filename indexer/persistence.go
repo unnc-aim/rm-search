@@ -184,6 +184,10 @@ func (i *Indexer) PersistenceAnnounce(ctx context.Context, id int64) error {
 
 	var announceDb model.Announce
 	if announce != nil {
+		contextBytesLen := len([]byte(announce.Context))
+		if contextBytesLen > 65535 {
+			logrus.Infof("long announce id: %d, context bytes len: %d", id, contextBytesLen)
+		}
 		attachments, err := json.Marshal(announce.Attachments)
 		if err != nil {
 			logrus.Errorf("marshal announce attachments failed: %v", err)
