@@ -2,7 +2,7 @@ package indexer
 
 import (
 	"context"
-	"github.com/scutrobotlab/rm-search/service"
+	"github.com/scutrobotlab/rm-search/svc"
 	"testing"
 )
 
@@ -13,7 +13,7 @@ func TestIndexer_RecreateIndex(t *testing.T) {
 
 func TestIndexer_ScrollAndIndex(t *testing.T) {
 	ctx := context.Background()
-	svcCtx := service.NewContextForTest(service.WithDb(), service.WithElastic())
+	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithElastic())
 	idx := NewIndexer(svcCtx)
 
 	index, err := idx.CreateIndex()
@@ -30,7 +30,7 @@ func TestIndexer_ScrollAndIndex(t *testing.T) {
 }
 
 func TestIndexer_DeleteUnusedIndices(t *testing.T) {
-	svcCtx := service.NewContextForTest(service.WithDb(), service.WithElastic())
+	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithElastic())
 	idx := NewIndexer(svcCtx)
 
 	if err := idx.DeleteUnusedIndices(); err != nil {

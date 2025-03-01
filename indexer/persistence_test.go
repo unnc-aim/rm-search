@@ -2,13 +2,13 @@ package indexer
 
 import (
 	"context"
-	"github.com/scutrobotlab/rm-search/service"
+	"github.com/scutrobotlab/rm-search/svc"
 	"testing"
 )
 
 func TestIndexer_Persistence(t *testing.T) {
 	ctx := context.Background()
-	svcCtx := service.NewContextForTest(service.WithDb())
+	svcCtx := svc.NewContextForTest(svc.WithDb())
 	idx := NewIndexer(svcCtx)
 	err := idx.Persistence(ctx, 54068)
 	if err != nil {
@@ -18,7 +18,7 @@ func TestIndexer_Persistence(t *testing.T) {
 
 func TestIndexer_BatchPersistence(t *testing.T) {
 	ctx := context.Background()
-	svcCtx := service.NewContextForTest(service.WithDb())
+	svcCtx := svc.NewContextForTest(svc.WithDb())
 	idx := NewIndexer(svcCtx)
 	err := idx.BatchPersistenceRangeIfNotExist(ctx, 1, 11300, 10)
 	if err != nil {

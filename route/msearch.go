@@ -3,7 +3,7 @@ package route
 import (
 	"bytes"
 	"github.com/gin-gonic/gin"
-	"github.com/scutrobotlab/rm-search/service"
+	"github.com/scutrobotlab/rm-search/svc"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
@@ -17,7 +17,7 @@ func MSearch(c *gin.Context) {
 	}
 	logrus.Debugf("reqBody: %s", string(reqBody))
 
-	mSearch, err := service.Ctx().Elastic.Msearch(bytes.NewReader(reqBody))
+	mSearch, err := svc.Ctx().Elastic.Msearch(bytes.NewReader(reqBody))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

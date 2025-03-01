@@ -1,12 +1,12 @@
 package indexer
 
-import "github.com/scutrobotlab/rm-search/service"
+import "github.com/scutrobotlab/rm-search/svc"
 
 type Indexer struct {
-	SvcCtx *service.Context
+	SvcCtx *svc.Context
 }
 
-func NewIndexer(svcCtx *service.Context) *Indexer {
+func NewIndexer(svcCtx *svc.Context) *Indexer {
 	return &Indexer{
 		SvcCtx: svcCtx,
 	}

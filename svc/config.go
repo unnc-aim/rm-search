@@ -1,4 +1,4 @@
-package service
+package svc
 
 import (
 	"gopkg.in/yaml.v3"

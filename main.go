@@ -2,12 +2,12 @@ package main
 
 import (
 	"github.com/scutrobotlab/rm-search/route"
-	"github.com/scutrobotlab/rm-search/service"
+	"github.com/scutrobotlab/rm-search/svc"
 )
 
 func main() {
-	c := service.ReadConfig("etc/config.yaml")
-	service.InitContext(c)
+	c := svc.ReadConfig("etc/config.yaml")
+	svc.InitContext(c)
 
 	route.Run()
 }
