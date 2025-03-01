@@ -153,3 +153,49 @@ func (i *Indexer) ScrollAndIndexBbsPost(ctx context.Context, index string, start
 
 	return successCount, nil
 }
+
+// ScrollAndIndexAnnounce 滚动查询并索引公告
+func (i *Indexer) ScrollAndIndexAnnounce(ctx context.Context, index string, startId, endId int64) (int64, error) {
+	p := i.SvcCtx.Query.Announce
+	const PageSize = 1000
+	successCount := int64(0)
+	for offset := startId; offset < endId; {
+		announces, err := p.WithContext(ctx).
+			Where(
+				p.ID.Gte(offset),
+				p.ID.Lt(endId),
+			).
+			Limit(PageSize).
+			Find()
+		if err != nil {
+			return successCount, errors.Wrapf(err, "find announces failed, offset: %d", offset)
+		}
+		if len(announces) == 0 {
+			break
+		}
+		for _, announce := range announces {
+			if announce == nil {
+				continue
+			}
+			if !announce.Found {
+				continue
+			}
+			id := GetEntityId(EntityTypeAnnounce, announce.ID)
+			doc, err := ConvertAnnounce(id, *announce)
+			if err != nil {
+				logrus.Errorf("convert announce failed, id: %d, err: %v", announce.ID, err)
+				continue
+			}
+			if err = i.IndexDoc(index, id, doc); err != nil {
+				logrus.Errorf("index announce failed, id: %d, err: %v", announce.ID, err)
+				continue
+			}
+			successCount++
+		}
+
+		offset = announces[len(announces)-1].ID + 1
+		logrus.Infof("index %d announces, next offset: %d", len(announces), offset)
+	}
+
+	return successCount, nil
+}

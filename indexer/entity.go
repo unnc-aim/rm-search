@@ -7,7 +7,8 @@ import (
 type EntityType string
 
 const (
-	EntityTypeBbsPost = "bbs-post"
+	EntityTypeBbsPost  = "bbs-post"
+	EntityTypeAnnounce = "announce"
 )
 
 type BaseEntity struct {
@@ -29,7 +30,8 @@ type BaseEntity struct {
 
 type IndexEntity struct {
 	BaseEntity
-	BbsPost *BbsPost `json:"bbs_post,omitempty"`
+	BbsPost  *BbsPost  `json:"bbs_post,omitempty"`
+	Announce *Announce `json:"announce,omitempty"`
 }
 
 func GetEntityId(entityType EntityType, id any) string {

@@ -44,7 +44,7 @@ func GetBbsPost(id int64) (ret *BbsPostResp, err error) {
 }
 
 // GetAnnounce 获取公告信息
-func GetAnnounce(id int64) (ret *AnnounceMainContent, err error) {
+func GetAnnounce(id int64) (ret *Announce, err error) {
 	url := fmt.Sprintf("https://www.robomaster.com/zh-CN/resource/pages/announcement/%d", id)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -127,7 +127,7 @@ func GetAnnounce(id int64) (ret *AnnounceMainContent, err error) {
 	}
 	attachments := ParseAttachment(mainContext)
 
-	return &AnnounceMainContent{
+	return &Announce{
 		Id:          id,
 		Title:       title,
 		Date:        date,

@@ -113,7 +113,7 @@ type TeamInfo struct {
 	CollegeName string  `json:"collegeName"`
 }
 
-type AnnounceMainContent struct {
+type Announce struct {
 	Id          int64        `json:"id"`
 	Title       string       `json:"title"`
 	Date        time.Time    `json:"date"`

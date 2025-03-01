@@ -38,3 +38,21 @@ func TestIndexer_DeleteUnusedIndices(t *testing.T) {
 	}
 	t.Log("unused indices deleted")
 }
+
+func TestIndexer_ScrollAndIndexAnnounce(t *testing.T) {
+	ctx := context.Background()
+	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithElastic())
+	idx := NewIndexer(svcCtx)
+
+	index, err := idx.CreateIndex()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("index %s created", index)
+
+	count, err := idx.ScrollAndIndexAnnounce(ctx, index, 1, 2000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("index %d announces", count)
+}

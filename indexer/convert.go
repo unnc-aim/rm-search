@@ -5,13 +5,17 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/scutrobotlab/rm-search/common"
+	"github.com/scutrobotlab/rm-search/database/model"
 	"github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
 	"time"
 )
 
-const BBSBaseURL = "https://bbs.robomaster.com"
+const (
+	BBSBaseURL      = "https://bbs.robomaster.com"
+	AnnounceBaseURL = "https://www.robomaster.com/zh-CN/resource/pages/announcement"
+)
 
 var ErrBbsPostCannotIndex = errors.New("bbs post cannot be indexed")
 
@@ -135,5 +139,47 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 			UpdateTime:     updateTime,
 		},
 		BbsPost: &post,
+	})
+}
+
+// ConvertAnnounce 转换公告信息
+func ConvertAnnounce(id string, src model.Announce) ([]byte, error) {
+	var attachments []Attachment
+	err := json.Unmarshal([]byte(src.Attachments), &attachments)
+	if err != nil {
+		logrus.Errorf("failed to unmarshal attachments: %v", err)
+	}
+	announce := Announce{
+		Id:          src.ID,
+		Title:       src.Title,
+		Date:        src.Date,
+		Context:     src.Context,
+		Content:     src.Content,
+		Attachments: attachments,
+	}
+
+	title := strings.TrimSpace(announce.Title)
+	content := announce.Content
+	url := fmt.Sprintf("%s/%d", AnnounceBaseURL, announce.Id)
+	date := announce.Date.UnixMilli()
+
+	return json.Marshal(IndexEntity{
+		BaseEntity: BaseEntity{
+			Id:             id,
+			Type:           EntityTypeAnnounce,
+			Title:          title,
+			Content:        content,
+			Image:          "",
+			Url:            url,
+			Season:         "",
+			CategoryLvl0:   nil,
+			CategoryLvl1:   nil,
+			CollegeName:    nil,
+			AuthorNickname: "",
+			AuthorAvatar:   "",
+			CreateTime:     date,
+			UpdateTime:     date,
+		},
+		Announce: &announce,
 	})
 }
