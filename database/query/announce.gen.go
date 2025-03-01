@@ -33,7 +33,7 @@ func newAnnounce(db *gorm.DB, opts ...gen.DOOption) announce {
 	_announce.Date = field.NewTime(tableName, "date")
 	_announce.Context = field.NewString(tableName, "context")
 	_announce.Content = field.NewString(tableName, "content")
-	_announce.Attaches = field.NewString(tableName, "attaches")
+	_announce.Attachments = field.NewString(tableName, "attachments")
 	_announce.CreateTime = field.NewTime(tableName, "create_time")
 	_announce.UpdateTime = field.NewTime(tableName, "update_time")
 
@@ -45,16 +45,16 @@ func newAnnounce(db *gorm.DB, opts ...gen.DOOption) announce {
 type announce struct {
 	announceDo
 
-	ALL        field.Asterisk
-	ID         field.Int64  // 公告ID
-	Found      field.Bool   // 是否找到
-	Title      field.String // 标题
-	Date       field.Time   // 日期
-	Context    field.String // 上下文
-	Content    field.String // 内容
-	Attaches   field.String // 附件
-	CreateTime field.Time   // 创建时间
-	UpdateTime field.Time   // 更新时间
+	ALL         field.Asterisk
+	ID          field.Int64  // 公告ID
+	Found       field.Bool   // 是否找到
+	Title       field.String // 标题
+	Date        field.Time   // 日期
+	Context     field.String // 上下文
+	Content     field.String // 内容
+	Attachments field.String // 附件
+	CreateTime  field.Time   // 创建时间
+	UpdateTime  field.Time   // 更新时间
 
 	fieldMap map[string]field.Expr
 }
@@ -77,7 +77,7 @@ func (a *announce) updateTableName(table string) *announce {
 	a.Date = field.NewTime(table, "date")
 	a.Context = field.NewString(table, "context")
 	a.Content = field.NewString(table, "content")
-	a.Attaches = field.NewString(table, "attaches")
+	a.Attachments = field.NewString(table, "attachments")
 	a.CreateTime = field.NewTime(table, "create_time")
 	a.UpdateTime = field.NewTime(table, "update_time")
 
@@ -103,7 +103,7 @@ func (a *announce) fillFieldMap() {
 	a.fieldMap["date"] = a.Date
 	a.fieldMap["context"] = a.Context
 	a.fieldMap["content"] = a.Content
-	a.fieldMap["attaches"] = a.Attaches
+	a.fieldMap["attachments"] = a.Attachments
 	a.fieldMap["create_time"] = a.CreateTime
 	a.fieldMap["update_time"] = a.UpdateTime
 }

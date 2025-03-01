@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `announce`
     `date`        date            NOT NULL DEFAULT '0001-01-01' COMMENT '日期',
     `context`     text            NOT NULL COMMENT '上下文',
     `content`     text            NOT NULL COMMENT '内容',
-    `attaches`    json            NOT NULL COMMENT '附件',
+    `attachments` json            NOT NULL COMMENT '附件',
     `create_time` timestamp(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `update_time` timestamp(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`id`),
