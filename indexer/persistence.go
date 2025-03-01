@@ -147,3 +147,67 @@ func (i *Indexer) Persistence(ctx context.Context, id int64) error {
 
 	return nil
 }
+
+// BatchPersistenceAnnounceRange 批量持久化公告
+func (i *Indexer) BatchPersistenceAnnounceRange(ctx context.Context, startId, endId int64) error {
+	ids := make([]int64, 0, endId-startId)
+	for id := startId; id < endId; id++ {
+		ids = append(ids, id)
+	}
+	return i.BatchPersistenceAnnounceIds(ctx, ids)
+}
+
+// BatchPersistenceAnnounceIds 根据 ID 批量持久化公告
+func (i *Indexer) BatchPersistenceAnnounceIds(ctx context.Context, ids []int64) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	for _, id := range ids {
+		err := i.PersistenceAnnounce(ctx, id)
+		if err != nil {
+			logrus.Errorf("persistence announce %d failed: %v", id, err)
+		}
+	}
+	return nil
+}
+
+// PersistenceAnnounce 持久化公告
+func (i *Indexer) PersistenceAnnounce(ctx context.Context, id int64) error {
+	p := i.SvcCtx.Query.Announce
+
+	announce, err := GetAnnounce(id)
+	if err != nil {
+		if !errors.Is(err, ErrStatusNotFound) {
+			return errors.Wrap(err, "get announce info failed")
+		}
+	}
+
+	var announceDb model.Announce
+	if announce != nil {
+		attachments, err := json.Marshal(announce.Attachments)
+		if err != nil {
+			logrus.Errorf("marshal announce attachments failed: %v", err)
+		}
+		announceDb = model.Announce{
+			ID:          id,
+			Found:       true,
+			Title:       announce.Title,
+			Date:        announce.Date,
+			Context:     announce.Context,
+			Content:     announce.Content,
+			Attachments: string(attachments),
+		}
+	} else {
+		announceDb = model.Announce{
+			ID:          id,
+			Found:       false,
+			Attachments: "[]",
+		}
+	}
+	err = p.WithContext(ctx).Save(&announceDb)
+	if err != nil {
+		return errors.Wrap(err, "save announce info failed")
+	}
+
+	return nil
+}

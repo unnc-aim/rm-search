@@ -25,3 +25,23 @@ func TestIndexer_BatchPersistence(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestIndexer_PersistenceAnnounce(t *testing.T) {
+	ctx := context.Background()
+	svcCtx := svc.NewContextForTest(svc.WithDb())
+	idx := NewIndexer(svcCtx)
+	err := idx.PersistenceAnnounce(ctx, 1784)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestIndexer_BatchPersistenceAnnounce(t *testing.T) {
+	ctx := context.Background()
+	svcCtx := svc.NewContextForTest(svc.WithDb())
+	idx := NewIndexer(svcCtx)
+	err := idx.BatchPersistenceAnnounceRange(ctx, 800, 2000)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
