@@ -135,7 +135,9 @@ func (i *Indexer) ScrollAndIndexBbsPost(ctx context.Context, index string, start
 			id := GetEntityId(EntityTypeBbsPost, post.ID)
 			doc, err := ConvertBbsPost(id, []byte(post.Data))
 			if err != nil {
-				logrus.Errorf("convert post failed, id: %d, err: %v", post.ID, err)
+				if !errors.Is(err, ErrBbsPostCannotIndex) {
+					logrus.Errorf("convert post failed, id: %d, err: %v", post.ID, err)
+				}
 				continue
 			}
 			if err = i.IndexDoc(index, id, doc); err != nil {

@@ -21,6 +21,10 @@
         "type": "keyword",
         "index": false
       },
+      "url": {
+        "type": "keyword",
+        "index": false
+      },
       "season": {
         "type": "text",
         "fields": {

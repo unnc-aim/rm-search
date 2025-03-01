@@ -3,11 +3,16 @@ package indexer
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/scutrobotlab/rm-search/common"
 	"github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
 )
+
+const BBSBaseURL = "https://bbs.robomaster.com"
+
+var ErrBbsPostCannotIndex = errors.New("bbs post cannot be indexed")
 
 // ConvertBbsPost 转换 BbsPost 信息
 func ConvertBbsPost(id string, src []byte) ([]byte, error) {
@@ -47,6 +52,23 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 		if len(headImg) > 0 {
 			image = headImg[0].Url
 		}
+	}
+
+	var url string
+	switch post.Category {
+	case "ARTICLE":
+		url = fmt.Sprintf("%s/article/%d", BBSBaseURL, post.Id)
+	case "FAQ":
+		url = fmt.Sprintf("%s/faq/%d", BBSBaseURL, post.Id)
+	case "WIKI":
+		if len(post.BelongWikis) > 0 {
+			url = fmt.Sprintf("%s/wiki/%d/%d", BBSBaseURL, post.BelongWikis[0].WikiId, post.Id)
+		}
+	default:
+		logrus.Debugf("unknown category: %s, id: %d", post.Category, post.Id)
+	}
+	if url == "" {
+		return nil, ErrBbsPostCannotIndex
 	}
 
 	// TODO: 从其他字段中提取赛季信息
@@ -91,6 +113,7 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 			Title:        title,
 			Content:      content,
 			Image:        image,
+			Url:          url,
 			Season:       season,
 			CategoryLvl0: categoryLvl0,
 			CategoryLvl1: categoryLvl1,

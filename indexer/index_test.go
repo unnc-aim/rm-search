@@ -6,6 +6,11 @@ import (
 	"testing"
 )
 
+func TestIndexer_RecreateIndex(t *testing.T) {
+	TestIndexer_ScrollAndIndex(t)
+	TestIndexer_DeleteUnusedIndices(t)
+}
+
 func TestIndexer_ScrollAndIndex(t *testing.T) {
 	ctx := context.Background()
 	svcCtx := service.NewContextForTest(service.WithDb(), service.WithElastic())
