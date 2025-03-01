@@ -21,6 +21,8 @@ type BaseEntity struct {
 	CategoryLvl0 []string `json:"category_lvl0"` // 一级分类
 	CategoryLvl1 []string `json:"category_lvl1"` // 二级分类
 	CollegeName  []string `json:"college_name"`  // 学校名称
+	CreateTime   int64    `json:"create_time"`   // 创建时间
+	UpdateTime   int64    `json:"update_time"`   // 更新时间
 }
 
 type IndexEntity struct {

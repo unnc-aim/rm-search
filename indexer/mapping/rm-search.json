@@ -61,6 +61,12 @@
           }
         }
       },
+      "create_time": {
+        "type": "date"
+      },
+      "update_time": {
+        "type": "date"
+      },
       "bbs_post": {
         "properties": {
           "approvals": {

@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
+	"time"
 )
 
 const BBSBaseURL = "https://bbs.robomaster.com"
@@ -106,6 +107,9 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 		collegeName = []string{"未分类"}
 	}
 
+	createTime := time.Time(post.CreateAt).UnixMilli()
+	updateTime := time.Time(post.UpdateAt).UnixMilli()
+
 	return json.Marshal(IndexEntity{
 		BaseEntity: BaseEntity{
 			Id:           id,
@@ -118,6 +122,8 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 			CategoryLvl0: categoryLvl0,
 			CategoryLvl1: categoryLvl1,
 			CollegeName:  collegeName,
+			CreateTime:   createTime,
+			UpdateTime:   updateTime,
 		},
 		BbsPost: &post,
 	})
