@@ -14,6 +14,11 @@ func HTMLToText(htmlStr string) (string, error) {
 		return "", errors.Wrap(err, "failed to parse HTML")
 	}
 
+	return HTMLNodeToText(doc)
+}
+
+// HTMLNodeToText 将HTML节点转换为纯文本
+func HTMLNodeToText(n *html.Node) (string, error) {
 	var text strings.Builder
 	// 递归遍历HTML节点树
 	var traverse func(n *html.Node)
@@ -33,7 +38,7 @@ func HTMLToText(htmlStr string) (string, error) {
 		}
 	}
 	// 从根节点开始遍历
-	traverse(doc)
+	traverse(n)
 
 	// 返回最终的纯文本
 	return strings.TrimSpace(text.String()), nil

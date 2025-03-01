@@ -1,5 +1,7 @@
 package indexer
 
+import "time"
+
 type BbsPostResp RestResp[any]
 
 type RestResp[T any] struct {
@@ -79,10 +81,10 @@ type Solution struct {
 }
 
 type Attachment struct {
-	Id        int64  `json:"id"`
+	Id        int64  `json:"id,omitempty"`
 	Src       string `json:"src"`
 	Name      string `json:"name"`
-	Downloads int64  `json:"downloads"`
+	Downloads int64  `json:"downloads,omitempty"`
 }
 
 type Reference struct {
@@ -109,4 +111,13 @@ type TeamInfo struct {
 	NameZh      string  `json:"nameZh"`
 	CollegeId   *int64  `json:"collegeId"`
 	CollegeName string  `json:"collegeName"`
+}
+
+type AnnounceMainContent struct {
+	Id          int64        `json:"id"`
+	Title       string       `json:"title"`
+	Date        time.Time    `json:"date"`
+	Context     string       `json:"context"`
+	Content     string       `json:"content"`
+	Attachments []Attachment `json:"attachments"`
 }

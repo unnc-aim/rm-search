@@ -16,34 +16,39 @@ import (
 )
 
 var (
-	Q       = new(Query)
-	BbsPost *bbsPost
+	Q        = new(Query)
+	Announce *announce
+	BbsPost  *bbsPost
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
+	Announce = &Q.Announce
 	BbsPost = &Q.BbsPost
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:      db,
-		BbsPost: newBbsPost(db, opts...),
+		db:       db,
+		Announce: newAnnounce(db, opts...),
+		BbsPost:  newBbsPost(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	BbsPost bbsPost
+	Announce announce
+	BbsPost  bbsPost
 }
 
 func (q *Query) Available() bool { return q.db != nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:      db,
-		BbsPost: q.BbsPost.clone(db),
+		db:       db,
+		Announce: q.Announce.clone(db),
+		BbsPost:  q.BbsPost.clone(db),
 	}
 }
 
@@ -57,18 +62,21 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:      db,
-		BbsPost: q.BbsPost.replaceDB(db),
+		db:       db,
+		Announce: q.Announce.replaceDB(db),
+		BbsPost:  q.BbsPost.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	BbsPost IBbsPostDo
+	Announce IAnnounceDo
+	BbsPost  IBbsPostDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		BbsPost: q.BbsPost.WithContext(ctx),
+		Announce: q.Announce.WithContext(ctx),
+		BbsPost:  q.BbsPost.WithContext(ctx),
 	}
 }
 

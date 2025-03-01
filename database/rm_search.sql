@@ -16,3 +16,22 @@ CREATE TABLE IF NOT EXISTS `bbs_post`
     KEY `idx_create_time` (`create_time`),
     KEY `idx_update_time` (`update_time`)
 ) COMMENT '论坛帖子';
+
+CREATE TABLE IF NOT EXISTS `announce`
+(
+    `id`          bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '公告ID',
+    `found`       boolean         NOT NULL DEFAULT FALSE COMMENT '是否找到',
+    `title`       varchar(255)    NOT NULL DEFAULT '' COMMENT '标题',
+    `date`        date            NOT NULL DEFAULT '0001-01-01' COMMENT '日期',
+    `context`     text            NOT NULL COMMENT '上下文',
+    `content`     text            NOT NULL COMMENT '内容',
+    `attaches`    json            NOT NULL COMMENT '附件',
+    `create_time` timestamp(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `update_time` timestamp(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_found` (`found`),
+    KEY `idx_title` (`title`),
+    KEY `idx_date` (`date`),
+    KEY `idx_create_time` (`create_time`),
+    KEY `idx_update_time` (`update_time`)
+) COMMENT '公告';

@@ -26,3 +26,11 @@ func TestGetBbsPost2(t *testing.T) {
 		}
 	}
 }
+
+func TestGetAnnounce(t *testing.T) {
+	announce, err := GetAnnounce(1784)
+	if err != nil {
+		t.Fatalf("GetAnnounce error: %v", err)
+	}
+	t.Logf("Announce: %+v", announce)
+}
