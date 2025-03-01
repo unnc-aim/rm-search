@@ -7,13 +7,19 @@ import (
 	"gorm.io/gorm"
 )
 
+var global *Context
+
 type Context struct {
 	Db      *gorm.DB
 	Query   *query.Query
 	Elastic *elasticsearch.Client
 }
 
-func NewContext(c Config) *Context {
+func Ctx() *Context {
+	return global
+}
+
+func InitContext(c Config) {
 	db, err := gorm.Open(mysql.Open(c.DataSource), &gorm.Config{})
 	if err != nil {
 		panic(err)
@@ -27,7 +33,7 @@ func NewContext(c Config) *Context {
 		panic(err)
 	}
 
-	return &Context{
+	global = &Context{
 		Db:      db,
 		Query:   query.Use(db),
 		Elastic: elastic,

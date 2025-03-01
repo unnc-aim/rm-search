@@ -6,11 +6,13 @@ toolchain go1.23.3
 
 require (
 	github.com/elastic/go-elasticsearch/v8 v8.17.0
+	github.com/go-ego/gse v0.80.3
 	github.com/pkg/errors v0.9.1
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/samber/lo v1.47.0
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/net v0.25.0
+	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.5.2
 	gorm.io/gen v0.3.23
 	gorm.io/gorm v1.25.5
@@ -19,7 +21,6 @@ require (
 
 require (
 	github.com/elastic/elastic-transport-go/v8 v8.6.0 // indirect
-	github.com/go-ego/gse v0.80.3 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect

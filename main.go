@@ -1,5 +1,10 @@
 package main
 
+import (
+	"github.com/scutrobotlab/rm-search/service"
+)
+
 func main() {
-	return
+	c := service.ReadConfig("etc/config.yaml")
+	service.InitContext(c)
 }

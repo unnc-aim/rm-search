@@ -1,5 +1,11 @@
 package service
 
+import (
+	"gopkg.in/yaml.v3"
+	"io"
+	"os"
+)
+
 type Config struct {
 	DataSource    string        `yaml:"DataSource"`
 	ElasticConfig ElasticConfig `yaml:"ElasticConfig"`
@@ -8,4 +14,22 @@ type Config struct {
 type ElasticConfig struct {
 	Addresses []string `yaml:"Addresses"`
 	APIKey    string   `yaml:"APIKey"`
+}
+
+func ReadConfig(path string) Config {
+	conf, err := os.Open(path)
+	if err != nil {
+		panic(err)
+	}
+	confBytes, err := io.ReadAll(conf)
+	if err != nil {
+		panic(err)
+	}
+	var c Config
+	err = yaml.Unmarshal(confBytes, &c)
+	if err != nil {
+		panic(err)
+	}
+
+	return c
 }
