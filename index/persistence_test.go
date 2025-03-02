@@ -40,7 +40,7 @@ func TestIndexer_BatchPersistenceAnnounce(t *testing.T) {
 	ctx := context.Background()
 	svcCtx := svc.NewContextForTest(svc.WithDb())
 	idx := NewIndexer(svcCtx)
-	err := idx.BatchPersistenceAnnounceRange(ctx, 800, 2000)
+	err := idx.BatchPersistenceAnnounceRange(ctx, 800, 2000, 10)
 	if err != nil {
 		t.Fatal(err)
 	}

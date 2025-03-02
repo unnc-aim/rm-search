@@ -181,7 +181,7 @@ func ParseAttachment(n *html.Node) (ret []Attachment) {
 	}
 
 	traverse(n)
-	return ret
+	return common.NotNullSlice(ret)
 }
 
 // GetAttachment 获取附件
