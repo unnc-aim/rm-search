@@ -13,11 +13,11 @@ const TableNameAttachment = "attachment"
 // Attachment mapped from table <attachment>
 type Attachment struct {
 	ID         int64     `gorm:"column:id;type:bigint unsigned;primaryKey;autoIncrement:true;comment:附件ID" json:"id"`                        // 附件ID
-	URL        string    `gorm:"column:url;type:varchar(255);not null;uniqueIndex:idx_url,priority:1;comment:URL" json:"url"`                // URL
-	Name       string    `gorm:"column:name;type:varchar(255);not null;comment:名称" json:"name"`                                              // 名称
+	URL        string    `gorm:"column:url;type:varchar(512);not null;uniqueIndex:idx_url,priority:1;comment:URL" json:"url"`                // URL
+	Name       string    `gorm:"column:name;type:varchar(256);not null;comment:名称" json:"name"`                                              // 名称
 	Size       int32     `gorm:"column:size;type:int unsigned;not null;comment:大小" json:"size"`                                              // 大小
-	Type       string    `gorm:"column:type;type:varchar(255);not null;comment:类型" json:"type"`                                              // 类型
-	Sha256     string    `gorm:"column:sha256;type:varchar(255);not null;uniqueIndex:idx_sha256,priority:1;comment:SHA256" json:"sha256"`    // SHA256
+	Type       string    `gorm:"column:type;type:varchar(64);not null;comment:类型" json:"type"`                                               // 类型
+	Sha256     string    `gorm:"column:sha256;type:char(64);not null;uniqueIndex:idx_sha256,priority:1;comment:SHA256" json:"sha256"`        // SHA256
 	Content    string    `gorm:"column:content;type:mediumtext;not null;comment:内容" json:"content"`                                          // 内容
 	CreateTime time.Time `gorm:"column:create_time;type:timestamp(3);not null;default:CURRENT_TIMESTAMP(3);comment:创建时间" json:"create_time"` // 创建时间
 	UpdateTime time.Time `gorm:"column:update_time;type:timestamp(3);not null;default:CURRENT_TIMESTAMP(3);comment:更新时间" json:"update_time"` // 更新时间
