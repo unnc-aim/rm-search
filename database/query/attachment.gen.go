@@ -30,7 +30,7 @@ func newAttachment(db *gorm.DB, opts ...gen.DOOption) attachment {
 	_attachment.ID = field.NewInt64(tableName, "id")
 	_attachment.URL = field.NewString(tableName, "url")
 	_attachment.Name = field.NewString(tableName, "name")
-	_attachment.Size = field.NewInt32(tableName, "size")
+	_attachment.Size = field.NewInt64(tableName, "size")
 	_attachment.Type = field.NewString(tableName, "type")
 	_attachment.Sha256 = field.NewString(tableName, "sha256")
 	_attachment.Content = field.NewString(tableName, "content")
@@ -50,7 +50,7 @@ type attachment struct {
 	ID           field.Int64  // 附件ID
 	URL          field.String // URL
 	Name         field.String // 名称
-	Size         field.Int32  // 大小
+	Size         field.Int64  // 大小
 	Type         field.String // 类型
 	Sha256       field.String // SHA256
 	Content      field.String // 内容
@@ -76,7 +76,7 @@ func (a *attachment) updateTableName(table string) *attachment {
 	a.ID = field.NewInt64(table, "id")
 	a.URL = field.NewString(table, "url")
 	a.Name = field.NewString(table, "name")
-	a.Size = field.NewInt32(table, "size")
+	a.Size = field.NewInt64(table, "size")
 	a.Type = field.NewString(table, "type")
 	a.Sha256 = field.NewString(table, "sha256")
 	a.Content = field.NewString(table, "content")

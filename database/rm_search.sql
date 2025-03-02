@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `attachment`
     `id`            bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '附件ID',
     `url`           varchar(512)    NOT NULL DEFAULT '' COMMENT 'URL',
     `name`          varchar(256)    NOT NULL DEFAULT '' COMMENT '名称',
-    `size`          int unsigned    NOT NULL DEFAULT 0 COMMENT '大小',
+    `size`          bigint unsigned NOT NULL DEFAULT 0 COMMENT '大小',
     `type`          varchar(64)     NOT NULL DEFAULT '' COMMENT '类型',
     `sha256`        char(64)        NOT NULL DEFAULT '' COMMENT 'SHA256',
     `content`       mediumtext      NOT NULL COMMENT '内容',

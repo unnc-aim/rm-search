@@ -227,7 +227,7 @@ func GetAttachment(url string) (ret *Attachment, err error) {
 		Id:           0,
 		URL:          url,
 		Name:         name,
-		Size:         int32(len(data)),
+		Size:         int64(len(data)),
 		ContentType:  contentType,
 		LastModified: lastModified,
 		Data:         data,

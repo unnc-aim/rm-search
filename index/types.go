@@ -125,8 +125,8 @@ type Announce struct {
 type Attachment struct {
 	Id           int64     `json:"id,omitempty"`
 	URL          string    `json:"url"`
-	Name         string    `json:"name"`
-	Size         int32     `json:"size,omitempty"`
+	Name         string    `json:"name,omitempty"`
+	Size         int64     `json:"size,omitempty"`
 	ContentType  string    `json:"contentType,omitempty"`
 	LastModified time.Time `json:"lastModified,omitempty"`
 	Data         []byte    `json:"data,omitempty"`
