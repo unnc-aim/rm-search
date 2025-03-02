@@ -31,7 +31,7 @@ func (i *Indexer) BatchPersistenceRangeIfExist(ctx context.Context, startId, end
 	p := i.SvcCtx.Query.BbsPost
 	find, err := p.WithContext(ctx).
 		Select(p.ID).
-		Where(p.ID.Gte(startId), p.ID.Lt(endId)).
+		Where(p.ID.Gte(startId), p.ID.Lt(endId), p.Success.Is(true)).
 		Find()
 	if err != nil {
 		return errors.Wrap(err, "find post failed")
