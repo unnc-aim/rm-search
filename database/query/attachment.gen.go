@@ -34,6 +34,7 @@ func newAttachment(db *gorm.DB, opts ...gen.DOOption) attachment {
 	_attachment.Type = field.NewString(tableName, "type")
 	_attachment.Sha256 = field.NewString(tableName, "sha256")
 	_attachment.Content = field.NewString(tableName, "content")
+	_attachment.LastModified = field.NewInt64(tableName, "last_modified")
 	_attachment.CreateTime = field.NewTime(tableName, "create_time")
 	_attachment.UpdateTime = field.NewTime(tableName, "update_time")
 
@@ -45,16 +46,17 @@ func newAttachment(db *gorm.DB, opts ...gen.DOOption) attachment {
 type attachment struct {
 	attachmentDo
 
-	ALL        field.Asterisk
-	ID         field.Int64  // 附件ID
-	URL        field.String // URL
-	Name       field.String // 名称
-	Size       field.Int32  // 大小
-	Type       field.String // 类型
-	Sha256     field.String // SHA256
-	Content    field.String // 内容
-	CreateTime field.Time   // 创建时间
-	UpdateTime field.Time   // 更新时间
+	ALL          field.Asterisk
+	ID           field.Int64  // 附件ID
+	URL          field.String // URL
+	Name         field.String // 名称
+	Size         field.Int32  // 大小
+	Type         field.String // 类型
+	Sha256       field.String // SHA256
+	Content      field.String // 内容
+	LastModified field.Int64  // 最后修改时间
+	CreateTime   field.Time   // 创建时间
+	UpdateTime   field.Time   // 更新时间
 
 	fieldMap map[string]field.Expr
 }
@@ -78,6 +80,7 @@ func (a *attachment) updateTableName(table string) *attachment {
 	a.Type = field.NewString(table, "type")
 	a.Sha256 = field.NewString(table, "sha256")
 	a.Content = field.NewString(table, "content")
+	a.LastModified = field.NewInt64(table, "last_modified")
 	a.CreateTime = field.NewTime(table, "create_time")
 	a.UpdateTime = field.NewTime(table, "update_time")
 
@@ -96,7 +99,7 @@ func (a *attachment) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (a *attachment) fillFieldMap() {
-	a.fieldMap = make(map[string]field.Expr, 9)
+	a.fieldMap = make(map[string]field.Expr, 10)
 	a.fieldMap["id"] = a.ID
 	a.fieldMap["url"] = a.URL
 	a.fieldMap["name"] = a.Name
@@ -104,6 +107,7 @@ func (a *attachment) fillFieldMap() {
 	a.fieldMap["type"] = a.Type
 	a.fieldMap["sha256"] = a.Sha256
 	a.fieldMap["content"] = a.Content
+	a.fieldMap["last_modified"] = a.LastModified
 	a.fieldMap["create_time"] = a.CreateTime
 	a.fieldMap["update_time"] = a.UpdateTime
 }

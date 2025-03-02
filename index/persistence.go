@@ -269,13 +269,13 @@ func (i *Indexer) BatchPersistenceAttachmentFromAnnounce(ctx context.Context, st
 	}
 	urls := make([]string, 0)
 	for _, announce := range announces {
-		var attachments []BbsAttachment
+		var attachments []Attachment
 		err := json.Unmarshal([]byte(announce.Attachments), &attachments)
 		if err != nil {
 			logrus.Errorf("unmarshal attachments failed: %v", err)
 		}
 		for _, attachment := range attachments {
-			urls = append(urls, attachment.Src)
+			urls = append(urls, attachment.URL)
 		}
 	}
 	return i.BatchPersistenceAttachmentURLs(ctx, urls, goroutine)
@@ -329,7 +329,7 @@ func (i *Indexer) BatchPersistenceAttachmentURLs(ctx context.Context, urls []str
 func (i *Indexer) PersistenceAttachment(ctx context.Context, url string) error {
 	a := i.SvcCtx.Query.Attachment
 
-	attachment, contentType, err := GetAttachment(url)
+	attachment, err := GetAttachment(url)
 	if err != nil {
 		return errors.Wrap(err, "get attachment info failed")
 	}
@@ -338,28 +338,28 @@ func (i *Indexer) PersistenceAttachment(ctx context.Context, url string) error {
 	if err != nil {
 		logrus.Errorf("extract attachment name failed: %v", err)
 	}
-	size := int32(len(attachment))
-	sum256 := sha256.Sum256(attachment)
+	sum256 := sha256.Sum256(attachment.Data)
 	sha256Str := fmt.Sprintf("%X", sum256)
 
 	var content string
-	switch contentType {
+	switch attachment.ContentType {
 	case common.ContentTypePDF:
-		content, err = common.PDFToText(ctx, i.SvcCtx.Tika, bytes.NewReader(attachment))
+		content, err = common.PDFToText(ctx, i.SvcCtx.Tika, bytes.NewReader(attachment.Data))
 		if err != nil {
 			logrus.Errorf("pdf to text failed: %v", err)
 		}
 	default:
-		logrus.Errorf("unknown content type: %s", contentType)
+		logrus.Errorf("unknown content type: %s", attachment.ContentType)
 	}
 
 	attachmentDb := model.Attachment{
-		URL:     url,
-		Name:    name,
-		Size:    size,
-		Type:    contentType,
-		Sha256:  sha256Str,
-		Content: content,
+		URL:          url,
+		Name:         name,
+		Size:         attachment.Size,
+		Type:         attachment.ContentType,
+		Sha256:       sha256Str,
+		Content:      content,
+		LastModified: attachment.LastModified.UnixMilli(),
 	}
 
 	err = a.WithContext(ctx).Where(a.URL.Eq(url)).Save(&attachmentDb)

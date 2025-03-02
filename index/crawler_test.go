@@ -37,11 +37,9 @@ func TestGetAnnounce(t *testing.T) {
 
 func TestGetAttachment(t *testing.T) {
 	const URL = "https://terra-1-g.djicdn.com/b2a076471c6c4b72b574a977334d3e05/RoboMaster%202025%20%E6%9C%BA%E7%94%B2%E5%A4%A7%E5%B8%88%E8%B6%85%E7%BA%A7%E5%AF%B9%E6%8A%97%E8%B5%9B%E5%8F%82%E8%B5%9B%E6%89%8B%E5%86%8CV1.1.0%EF%BC%8820241225%EF%BC%89.pdf"
-	attachment, contentType, err := GetAttachment(URL)
+	attachment, err := GetAttachment(URL)
 	if err != nil {
 		t.Fatalf("GetAttachment error: %v", err)
 	}
-	size := len(attachment)
-	t.Logf("BbsAttachment size: %d", size)
-	t.Logf("BbsAttachment type: %s", contentType)
+	t.Logf("Attachment: %+v", attachment)
 }

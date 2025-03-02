@@ -33,15 +33,16 @@ CREATE TABLE IF NOT EXISTS `announce`
 
 CREATE TABLE IF NOT EXISTS `attachment`
 (
-    `id`          bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '附件ID',
-    `url`         varchar(512)    NOT NULL DEFAULT '' COMMENT 'URL',
-    `name`        varchar(256)    NOT NULL DEFAULT '' COMMENT '名称',
-    `size`        int unsigned    NOT NULL DEFAULT 0 COMMENT '大小',
-    `type`        varchar(64)     NOT NULL DEFAULT '' COMMENT '类型',
-    `sha256`      char(64)        NOT NULL DEFAULT '' COMMENT 'SHA256',
-    `content`     mediumtext      NOT NULL COMMENT '内容',
-    `create_time` timestamp(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
-    `update_time` timestamp(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    `id`            bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '附件ID',
+    `url`           varchar(512)    NOT NULL DEFAULT '' COMMENT 'URL',
+    `name`          varchar(256)    NOT NULL DEFAULT '' COMMENT '名称',
+    `size`          int unsigned    NOT NULL DEFAULT 0 COMMENT '大小',
+    `type`          varchar(64)     NOT NULL DEFAULT '' COMMENT '类型',
+    `sha256`        char(64)        NOT NULL DEFAULT '' COMMENT 'SHA256',
+    `content`       mediumtext      NOT NULL COMMENT '内容',
+    `last_modified` bigint unsigned NOT NULL DEFAULT 0 COMMENT '最后修改时间',
+    `create_time`   timestamp(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `update_time`   timestamp(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `idx_url` (`url`),
     UNIQUE KEY `idx_sha256` (`sha256`)

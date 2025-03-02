@@ -185,7 +185,7 @@ func ParseAttachment(n *html.Node) (ret []Attachment) {
 }
 
 // GetAttachment 获取附件
-func GetAttachment(url string) (ret []byte, contentType string, err error) {
+func GetAttachment(url string) (ret *Attachment, err error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return
@@ -202,14 +202,34 @@ func GetAttachment(url string) (ret []byte, contentType string, err error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return nil, "", fmt.Errorf("status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
 	}
 
-	contentType = resp.Header.Get("Content-Type")
-	ret, err = io.ReadAll(resp.Body)
+	contentType := resp.Header.Get("Content-Type")
+	lastModifiedStr := resp.Header.Get("Last-Modified")
+	// Wed, 25 Dec 2024 10:25:37 GMT
+	lastModified, err := time.Parse(time.RFC1123, lastModifiedStr)
+	if err != nil {
+		logrus.Errorf("parse last modified time failed: %v", err)
+	}
+
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
 
-	return ret, contentType, nil
+	name, err := extractAndUnescapeFileName(url)
+	if err != nil {
+		logrus.Errorf("extract attachment name failed: %v", err)
+	}
+
+	return &Attachment{
+		Id:           0,
+		URL:          url,
+		Name:         name,
+		Size:         int32(len(data)),
+		ContentType:  contentType,
+		LastModified: lastModified,
+		Data:         data,
+	}, nil
 }
