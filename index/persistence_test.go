@@ -20,7 +20,7 @@ func TestIndexer_BatchPersistenceRangeIfExist(t *testing.T) {
 	ctx := context.Background()
 	svcCtx := svc.NewContextForTest(svc.WithDb())
 	idx := NewIndexer(svcCtx)
-	err := idx.BatchPersistenceRangeIfExist(ctx, 1, 10000, 10)
+	err := idx.BatchPersistenceRangeIfExist(ctx, 0, 10_0000, 100)
 	if err != nil {
 		t.Fatal(err)
 	}
