@@ -212,7 +212,7 @@ func ConvertAttachment(id string, src model.Attachment) ([]byte, error) {
 		CollegeName:    nil,
 		AuthorNickname: "RoboMaster",
 		AuthorAvatar:   "/robomaster-10th.webp",
-		CreateTime:     src.CreateTime.UnixMilli(),
-		UpdateTime:     src.UpdateTime.UnixMilli(),
+		CreateTime:     src.LastModified,
+		UpdateTime:     src.LastModified,
 	}})
 }
