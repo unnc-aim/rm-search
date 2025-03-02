@@ -15,11 +15,11 @@ const (
 type EntitySource string
 
 const (
-	EntitySourceBbsPostArticle = "bbs-post:article"
-	EntitySourceBbsPostFAQ     = "bbs-post:faq"
-	EntitySourceBbsPostWiki    = "bbs-post:wiki"
-	EntitySourceAnnounce       = "announce"
-	EntitySourceAttachmentPDF  = "attachment:pdf"
+	EntitySourceBbsPostArticle = "论坛文章"
+	EntitySourceBbsPostFAQ     = "论坛问答"
+	EntitySourceBbsPostWiki    = "论坛专栏"
+	EntitySourceAnnounce       = "官网公告"
+	EntitySourceAttachmentPDF  = "PDF附件"
 )
 
 type BaseEntity struct {
