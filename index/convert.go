@@ -121,7 +121,7 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 	createTime := time.Time(post.CreateAt).UnixMilli()
 	updateTime := time.Time(post.UpdateAt).UnixMilli()
 
-	return json.Marshal(IndexEntity{
+	return json.Marshal(Entity{
 		BaseEntity: BaseEntity{
 			Id:             id,
 			Type:           EntityTypeBbsPost,
@@ -162,7 +162,7 @@ func ConvertAnnounce(id string, src model.Announce) ([]byte, error) {
 	url := fmt.Sprintf("%s/%d", AnnounceBaseURL, announce.Id)
 	date := announce.Date.UnixMilli()
 
-	return json.Marshal(IndexEntity{
+	return json.Marshal(Entity{
 		BaseEntity: BaseEntity{
 			Id:             id,
 			Type:           EntityTypeAnnounce,
@@ -184,7 +184,7 @@ func ConvertAnnounce(id string, src model.Announce) ([]byte, error) {
 
 // ConvertAttachment 转换附件信息
 func ConvertAttachment(id string, src model.Attachment) ([]byte, error) {
-	return json.Marshal(IndexEntity{BaseEntity: BaseEntity{
+	return json.Marshal(Entity{BaseEntity: BaseEntity{
 		Id:             id,
 		Type:           EntityTypeAttachment,
 		Title:          src.Name,

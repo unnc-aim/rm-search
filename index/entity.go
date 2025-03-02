@@ -29,7 +29,7 @@ type BaseEntity struct {
 	UpdateTime     int64    `json:"update_time"`     // 更新时间
 }
 
-type IndexEntity struct {
+type Entity struct {
 	BaseEntity
 }
 
