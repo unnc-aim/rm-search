@@ -9,6 +9,7 @@ import (
 type Config struct {
 	DataSource    string        `yaml:"DataSource"`
 	ElasticConfig ElasticConfig `yaml:"ElasticConfig"`
+	TikaHost      string        `yaml:"TikaHost"`
 }
 
 type ElasticConfig struct {

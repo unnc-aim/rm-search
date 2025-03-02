@@ -8,6 +8,7 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.17.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-ego/gse v0.80.3
+	github.com/google/go-tika v0.3.1
 	github.com/pkg/errors v0.9.1
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/samber/lo v1.47.0

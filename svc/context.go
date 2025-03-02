@@ -2,6 +2,7 @@ package svc
 
 import (
 	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/google/go-tika/tika"
 	"github.com/scutrobotlab/rm-search/database/query"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -13,6 +14,7 @@ type Context struct {
 	Db      *gorm.DB
 	Query   *query.Query
 	Elastic *elasticsearch.Client
+	Tika    *tika.Client
 }
 
 func Ctx() *Context {

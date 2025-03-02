@@ -3,3 +3,4 @@ ElasticConfig:
   Addresses:
     - "http://localhost:9200"
   APIKey: "ELASTIC_API_KEY"
+TikaHost: "http://localhost:9998"

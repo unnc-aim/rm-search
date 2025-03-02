@@ -2,9 +2,11 @@ package svc
 
 import (
 	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/google/go-tika/tika"
 	"github.com/scutrobotlab/rm-search/database/query"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"net/http"
 )
 
 type Option func(c *Context)
@@ -41,5 +43,13 @@ func WithElastic() Option {
 			panic(err)
 		}
 		c.Elastic = elastic
+	}
+}
+
+func WithTika() Option {
+	return func(c *Context) {
+		const TikaHost = "http://localhost:9998"
+		client := tika.NewClient(http.DefaultClient, TikaHost)
+		c.Tika = client
 	}
 }

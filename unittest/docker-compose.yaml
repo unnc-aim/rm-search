@@ -88,3 +88,14 @@ services:
     depends_on:
       - elasticsearch
     restart: unless-stopped
+
+  tika:
+    container_name: tika
+    image: apache/tika:3.1.0.0
+    restart: unless-stopped
+    ports:
+      - "9998:9998"
+    environment:
+      _JAVA_OPTIONS: -XX:UseSVE=0
+    networks:
+      - default
