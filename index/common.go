@@ -1,4 +1,4 @@
-package indexer
+package index
 
 import "github.com/scutrobotlab/rm-search/svc"
 
