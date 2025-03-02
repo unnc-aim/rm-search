@@ -30,3 +30,19 @@ CREATE TABLE IF NOT EXISTS `announce`
     KEY `idx_found` (`found`),
     KEY `idx_date` (`date`)
 ) COMMENT '公告';
+
+CREATE TABLE IF NOT EXISTS `attachment`
+(
+    `id`          bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '附件ID',
+    `url`         varchar(255)    NOT NULL DEFAULT '' COMMENT 'URL',
+    `name`        varchar(255)    NOT NULL DEFAULT '' COMMENT '名称',
+    `size`        int unsigned    NOT NULL DEFAULT 0 COMMENT '大小',
+    `type`        varchar(255)    NOT NULL DEFAULT '' COMMENT '类型',
+    `sha256`      varchar(255)    NOT NULL DEFAULT '' COMMENT 'SHA256',
+    `content`     mediumtext      NOT NULL COMMENT '内容',
+    `create_time` timestamp(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `update_time` timestamp(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `idx_url` (`url`),
+    UNIQUE KEY `idx_sha256` (`sha256`)
+) COMMENT '附件';

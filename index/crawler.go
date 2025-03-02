@@ -183,3 +183,33 @@ func ParseAttachment(n *html.Node) (ret []Attachment) {
 	traverse(n)
 	return ret
 }
+
+// GetAttachment 获取附件
+func GetAttachment(url string) (ret []byte, contentType string, err error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return
+	}
+
+	// 伪造 User-Agent 避免被拦截
+	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0")
+
+	client := http.DefaultClient
+	resp, err := client.Do(req)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, "", fmt.Errorf("status code: %d", resp.StatusCode)
+	}
+
+	contentType = resp.Header.Get("Content-Type")
+	ret, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	return ret, contentType, nil
+}

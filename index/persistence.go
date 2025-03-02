@@ -1,13 +1,19 @@
 package index
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"github.com/scutrobotlab/rm-search/common"
 	"github.com/scutrobotlab/rm-search/database/model"
 	"github.com/sirupsen/logrus"
 	"math"
+	"net/url"
+	"path"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -173,7 +179,7 @@ func (i *Indexer) BatchPersistenceAnnounceIds(ctx context.Context, ids []int64) 
 
 // PersistenceAnnounce 持久化公告
 func (i *Indexer) PersistenceAnnounce(ctx context.Context, id int64) error {
-	p := i.SvcCtx.Query.Announce
+	a := i.SvcCtx.Query.Announce
 
 	announce, err := GetAnnounce(id)
 	if err != nil {
@@ -208,10 +214,108 @@ func (i *Indexer) PersistenceAnnounce(ctx context.Context, id int64) error {
 			Attachments: "[]",
 		}
 	}
-	err = p.WithContext(ctx).Save(&announceDb)
+	err = a.WithContext(ctx).Save(&announceDb)
 	if err != nil {
 		return errors.Wrap(err, "save announce info failed")
 	}
 
 	return nil
+}
+
+// BatchPersistenceAttachmentFromAnnounce 批量持久化公告附件
+func (i *Indexer) BatchPersistenceAttachmentFromAnnounce(ctx context.Context, startId, endId int64) error {
+	a := i.SvcCtx.Query.Announce
+	announces, err := a.WithContext(ctx).
+		Where(a.ID.Gte(startId), a.ID.Lt(endId), a.Found.Is(true)).
+		Find()
+	if err != nil {
+		return errors.Wrap(err, "find announces failed")
+	}
+	urls := make([]string, 0)
+	for _, announce := range announces {
+		var attachments []Attachment
+		err := json.Unmarshal([]byte(announce.Attachments), &attachments)
+		if err != nil {
+			logrus.Errorf("unmarshal attachments failed: %v", err)
+		}
+		for _, attachment := range attachments {
+			urls = append(urls, attachment.Src)
+		}
+	}
+	return i.BatchPersistenceAttachmentURLs(ctx, urls)
+}
+
+// BatchPersistenceAttachmentURLs 批量持久化附件
+func (i *Indexer) BatchPersistenceAttachmentURLs(ctx context.Context, urls []string) error {
+	if len(urls) == 0 {
+		return nil
+	}
+	for _, u := range urls {
+		err := i.PersistenceAttachment(ctx, u)
+		if err != nil {
+			logrus.Errorf("persistence attachment %s failed: %v", u, err)
+		}
+	}
+	return nil
+}
+
+// PersistenceAttachment 持久化附件
+func (i *Indexer) PersistenceAttachment(ctx context.Context, url string) error {
+	a := i.SvcCtx.Query.Attachment
+
+	attachment, contentType, err := GetAttachment(url)
+	if err != nil {
+		return errors.Wrap(err, "get attachment info failed")
+	}
+
+	name, err := extractAndUnescapeFileName(url)
+	if err != nil {
+		logrus.Errorf("extract attachment name failed: %v", err)
+	}
+	size := int32(len(attachment))
+	sum256 := sha256.Sum256(attachment)
+	sha256Str := fmt.Sprintf("%X", sum256)
+
+	var content string
+	switch contentType {
+	case common.ContentTypePDF:
+		content, err = common.PDFToText(ctx, i.SvcCtx.Tika, bytes.NewReader(attachment))
+		if err != nil {
+			logrus.Errorf("pdf to text failed: %v", err)
+		}
+	default:
+		logrus.Errorf("unknown content type: %s", contentType)
+	}
+
+	attachmentDb := model.Attachment{
+		URL:     url,
+		Name:    name,
+		Size:    size,
+		Type:    contentType,
+		Sha256:  sha256Str,
+		Content: content,
+	}
+
+	err = a.WithContext(ctx).Where(a.URL.Eq(url)).Save(&attachmentDb)
+	if err != nil {
+		return errors.Wrap(err, "save attachment info failed")
+	}
+
+	return nil
+}
+
+func extractAndUnescapeFileName(urlStr string) (string, error) {
+	// 解析URL
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return "", err
+	}
+	// 提取文件名
+	filename := path.Base(u.Path)
+	// 去除URL转义
+	unescapedFilename, err := url.PathUnescape(filename)
+	if err != nil {
+		return "", err
+	}
+	return unescapedFilename, nil
 }
