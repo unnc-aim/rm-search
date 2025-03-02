@@ -16,11 +16,21 @@ func TestIndexer_Persistence(t *testing.T) {
 	}
 }
 
-func TestIndexer_BatchPersistence(t *testing.T) {
+func TestIndexer_BatchPersistenceRangeIfExist(t *testing.T) {
 	ctx := context.Background()
 	svcCtx := svc.NewContextForTest(svc.WithDb())
 	idx := NewIndexer(svcCtx)
-	err := idx.BatchPersistenceRangeIfNotExist(ctx, 1, 11300, 10)
+	err := idx.BatchPersistenceRangeIfExist(ctx, 1, 10000, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestIndexer_BatchPersistenceRangeIfNotExist(t *testing.T) {
+	ctx := context.Background()
+	svcCtx := svc.NewContextForTest(svc.WithDb())
+	idx := NewIndexer(svcCtx)
+	err := idx.BatchPersistenceRangeIfNotExist(ctx, 1, 10000, 10)
 	if err != nil {
 		t.Fatal(err)
 	}

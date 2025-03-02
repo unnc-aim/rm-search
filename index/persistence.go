@@ -25,6 +25,35 @@ var (
 	LastPrintTime = time.Now()
 )
 
+// BatchPersistenceRangeIfExist 批量持久化帖子，如果帖子存在
+func (i *Indexer) BatchPersistenceRangeIfExist(ctx context.Context, startId, endId int64, goroutine int) error {
+	// 查询已经持久化的帖子
+	p := i.SvcCtx.Query.BbsPost
+	find, err := p.WithContext(ctx).
+		Select(p.ID).
+		Where(p.ID.Gte(startId), p.ID.Lt(endId)).
+		Find()
+	if err != nil {
+		return errors.Wrap(err, "find post failed")
+	}
+	idSet := make(map[int64]struct{})
+	for _, post := range find {
+		idSet[post.ID] = struct{}{}
+	}
+	logrus.Infof("found %d posts have been persisted", len(idSet))
+
+	// 找出已经持久化的帖子
+	ids := make([]int64, 0, endId-startId)
+	for id := startId; id < endId; id++ {
+		if _, ok := idSet[id]; ok {
+			ids = append(ids, id)
+		}
+	}
+
+	logrus.Infof("found %d posts need to persistence", len(ids))
+	return i.BatchPersistenceIds(ctx, ids, goroutine)
+}
+
 // BatchPersistenceRangeIfNotExist 批量持久化帖子，如果帖子不存在
 func (i *Indexer) BatchPersistenceRangeIfNotExist(ctx context.Context, startId, endId int64, goroutine int) error {
 	// 查询已经持久化的帖子
