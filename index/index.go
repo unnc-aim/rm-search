@@ -156,14 +156,15 @@ func (i *Indexer) ScrollAndIndexBbsPost(ctx context.Context, index string, start
 
 // ScrollAndIndexAnnounce 滚动查询并索引公告
 func (i *Indexer) ScrollAndIndexAnnounce(ctx context.Context, index string, startId, endId int64) (int64, error) {
-	p := i.SvcCtx.Query.Announce
+	a := i.SvcCtx.Query.Announce
+
 	const PageSize = 1000
 	successCount := int64(0)
 	for offset := startId; offset < endId; {
-		announces, err := p.WithContext(ctx).
+		announces, err := a.WithContext(ctx).
 			Where(
-				p.ID.Gte(offset),
-				p.ID.Lt(endId),
+				a.ID.Gte(offset),
+				a.ID.Lt(endId),
 			).
 			Limit(PageSize).
 			Find()
@@ -195,6 +196,47 @@ func (i *Indexer) ScrollAndIndexAnnounce(ctx context.Context, index string, star
 
 		offset = announces[len(announces)-1].ID + 1
 		logrus.Infof("index %d announces, next offset: %d", len(announces), offset)
+	}
+
+	return successCount, nil
+}
+
+// ScrollAndIndexAttachment 滚动查询并索引附件
+func (i *Indexer) ScrollAndIndexAttachment(ctx context.Context, index string, startId, endId int64) (int64, error) {
+	p := i.SvcCtx.Query.Attachment
+
+	const PageSize = 1000
+	successCount := int64(0)
+	for offset := startId; offset < endId; {
+		attachments, err := p.WithContext(ctx).
+			Where(
+				p.ID.Gte(offset),
+				p.ID.Lt(endId),
+			).
+			Limit(PageSize).
+			Find()
+		if err != nil {
+			return successCount, errors.Wrapf(err, "find attachments failed, offset: %d", offset)
+		}
+		if len(attachments) == 0 {
+			break
+		}
+		for _, attachment := range attachments {
+			id := GetEntityId(EntityTypeAttachment, attachment.ID)
+			doc, err := ConvertAttachment(id, *attachment)
+			if err != nil {
+				logrus.Errorf("convert attachment failed, id: %d, err: %v", attachment.ID, err)
+				continue
+			}
+			if err = i.IndexDoc(index, id, doc); err != nil {
+				logrus.Errorf("index attachment failed, id: %d, err: %v", attachment.ID, err)
+				continue
+			}
+			successCount++
+		}
+
+		offset = attachments[len(attachments)-1].ID + 1
+		logrus.Infof("index %d attachments, next offset: %d", len(attachments), offset)
 	}
 
 	return successCount, nil

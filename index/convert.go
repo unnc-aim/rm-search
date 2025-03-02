@@ -181,3 +181,23 @@ func ConvertAnnounce(id string, src model.Announce) ([]byte, error) {
 		},
 	})
 }
+
+// ConvertAttachment 转换附件信息
+func ConvertAttachment(id string, src model.Attachment) ([]byte, error) {
+	return json.Marshal(IndexEntity{BaseEntity: BaseEntity{
+		Id:             id,
+		Type:           EntityTypeAttachment,
+		Title:          src.Name,
+		Content:        src.Content,
+		Image:          "/pdf-file-svgrepo-com.svg",
+		Url:            src.URL,
+		Season:         "",
+		CategoryLvl0:   []string{"官方信息"},
+		CategoryLvl1:   []string{"官方信息 > 附件"},
+		CollegeName:    nil,
+		AuthorNickname: "RoboMaster",
+		AuthorAvatar:   "/robomaster-10th.webp",
+		CreateTime:     src.CreateTime.UnixMilli(),
+		UpdateTime:     src.UpdateTime.UnixMilli(),
+	}})
+}

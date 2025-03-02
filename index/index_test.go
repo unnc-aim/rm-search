@@ -27,6 +27,13 @@ func TestIndexer_RecreateIndex(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Logf("index %d announces", count)
+
+	count, err = idx.ScrollAndIndexAttachment(ctx, index, 1, 2000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("index %d attachments", count)
 
 	TestIndexer_DeleteUnusedIndices(t)
 }
@@ -75,4 +82,21 @@ func TestIndexer_ScrollAndIndexAnnounce(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Logf("index %d announces", count)
+}
+
+func TestIndexer_ScrollAndIndexAttachment(t *testing.T) {
+	ctx := context.Background()
+	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithElastic())
+	idx := NewIndexer(svcCtx)
+
+	index, err := idx.CreateIndex()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err := idx.ScrollAndIndexAttachment(ctx, index, 1, 2000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("index %d attachments", count)
 }

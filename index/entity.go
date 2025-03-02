@@ -7,8 +7,9 @@ import (
 type EntityType string
 
 const (
-	EntityTypeBbsPost  = "bbs-post"
-	EntityTypeAnnounce = "announce"
+	EntityTypeBbsPost    = "bbs-post"
+	EntityTypeAnnounce   = "announce"
+	EntityTypeAttachment = "attachment"
 )
 
 type BaseEntity struct {
