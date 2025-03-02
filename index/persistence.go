@@ -233,7 +233,7 @@ func (i *Indexer) BatchPersistenceAttachmentFromAnnounce(ctx context.Context, st
 	}
 	urls := make([]string, 0)
 	for _, announce := range announces {
-		var attachments []Attachment
+		var attachments []BbsAttachment
 		err := json.Unmarshal([]byte(announce.Attachments), &attachments)
 		if err != nil {
 			logrus.Errorf("unmarshal attachments failed: %v", err)

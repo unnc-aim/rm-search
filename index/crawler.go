@@ -169,7 +169,7 @@ func ParseAttachment(n *html.Node) (ret []Attachment) {
 			for _, attr := range n.Attr {
 				if attr.Key == "href" && strings.HasSuffix(attr.Val, ".pdf") {
 					ret = append(ret, Attachment{
-						Src:  attr.Val,
+						URL:  attr.Val,
 						Name: n.FirstChild.Data,
 					})
 				}

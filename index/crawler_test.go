@@ -42,6 +42,6 @@ func TestGetAttachment(t *testing.T) {
 		t.Fatalf("GetAttachment error: %v", err)
 	}
 	size := len(attachment)
-	t.Logf("Attachment size: %d", size)
-	t.Logf("Attachment type: %s", contentType)
+	t.Logf("BbsAttachment size: %d", size)
+	t.Logf("BbsAttachment type: %s", contentType)
 }
