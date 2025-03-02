@@ -59,18 +59,22 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 		}
 	}
 
+	var source string
 	var url string
 	switch post.Category {
 	case "ARTICLE":
+		source = EntitySourceBbsPostArticle
 		url = fmt.Sprintf("%s/article/%d", BBSBaseURL, post.Id)
 	case "FAQ":
+		source = EntitySourceBbsPostFAQ
 		url = fmt.Sprintf("%s/faq/%d", BBSBaseURL, post.Id)
 	case "WIKI":
+		source = EntitySourceBbsPostWiki
 		if len(post.BelongWikis) > 0 {
 			url = fmt.Sprintf("%s/wiki/%d/%d", BBSBaseURL, post.BelongWikis[0].WikiId, post.Id)
 		}
 	default:
-		logrus.Debugf("unknown category: %s, id: %d", post.Category, post.Id)
+		logrus.Errorf("unknown category: %s, id: %d", post.Category, post.Id)
 	}
 	if url == "" {
 		return nil, ErrBbsPostCannotIndex
@@ -125,6 +129,7 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 		BaseEntity: BaseEntity{
 			Id:             id,
 			Type:           EntityTypeBbsPost,
+			Source:         source,
 			Title:          title,
 			Content:        content,
 			Image:          image,
@@ -166,6 +171,7 @@ func ConvertAnnounce(id string, src model.Announce) ([]byte, error) {
 		BaseEntity: BaseEntity{
 			Id:             id,
 			Type:           EntityTypeAnnounce,
+			Source:         EntitySourceAnnounce,
 			Title:          title,
 			Content:        content,
 			Image:          "",
@@ -184,9 +190,18 @@ func ConvertAnnounce(id string, src model.Announce) ([]byte, error) {
 
 // ConvertAttachment 转换附件信息
 func ConvertAttachment(id string, src model.Attachment) ([]byte, error) {
+	var source string
+	switch src.Type {
+	case common.ContentTypePDF:
+		source = EntitySourceAttachmentPDF
+	default:
+		logrus.Errorf("unknown attachment type: %s", src.Type)
+	}
+
 	return json.Marshal(Entity{BaseEntity: BaseEntity{
 		Id:             id,
 		Type:           EntityTypeAttachment,
+		Source:         source,
 		Title:          src.Name,
 		Content:        src.Content,
 		Image:          "/pdf-file-svgrepo-com.svg",

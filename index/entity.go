@@ -12,9 +12,20 @@ const (
 	EntityTypeAttachment = "attachment"
 )
 
+type EntitySource string
+
+const (
+	EntitySourceBbsPostArticle = "bbs-post:article"
+	EntitySourceBbsPostFAQ     = "bbs-post:faq"
+	EntitySourceBbsPostWiki    = "bbs-post:wiki"
+	EntitySourceAnnounce       = "announce"
+	EntitySourceAttachmentPDF  = "attachment:pdf"
+)
+
 type BaseEntity struct {
 	Id             string   `json:"id"`              // 主键
 	Type           string   `json:"type"`            // 类型
+	Source         string   `json:"source"`          // 来源
 	Title          string   `json:"title"`           // 标题
 	Content        string   `json:"content"`         // 内容
 	Image          string   `json:"image"`           // 图片
