@@ -223,7 +223,7 @@ func (i *Indexer) PersistenceAnnounce(ctx context.Context, id int64) error {
 }
 
 // BatchPersistenceAttachmentFromAnnounce 批量持久化公告附件
-func (i *Indexer) BatchPersistenceAttachmentFromAnnounce(ctx context.Context, startId, endId int64) error {
+func (i *Indexer) BatchPersistenceAttachmentFromAnnounce(ctx context.Context, startId, endId int64, goroutine int) error {
 	a := i.SvcCtx.Query.Announce
 	announces, err := a.WithContext(ctx).
 		Where(a.ID.Gte(startId), a.ID.Lt(endId), a.Found.Is(true)).
@@ -242,20 +242,50 @@ func (i *Indexer) BatchPersistenceAttachmentFromAnnounce(ctx context.Context, st
 			urls = append(urls, attachment.Src)
 		}
 	}
-	return i.BatchPersistenceAttachmentURLs(ctx, urls)
+	return i.BatchPersistenceAttachmentURLs(ctx, urls, goroutine)
 }
 
 // BatchPersistenceAttachmentURLs 批量持久化附件
-func (i *Indexer) BatchPersistenceAttachmentURLs(ctx context.Context, urls []string) error {
+func (i *Indexer) BatchPersistenceAttachmentURLs(ctx context.Context, urls []string, goroutine int) error {
 	if len(urls) == 0 {
 		return nil
 	}
-	for _, u := range urls {
-		err := i.PersistenceAttachment(ctx, u)
-		if err != nil {
-			logrus.Errorf("persistence attachment %s failed: %v", u, err)
+
+	wg := sync.WaitGroup{}
+	size := int(math.Ceil(float64(len(urls)) / float64(goroutine)))
+	chunks := lo.Chunk(urls, size)
+	logrus.Infof("split %d urls into %d chunks", len(urls), len(chunks))
+
+	for j, chunk := range chunks {
+		if len(chunk) == 0 {
+			logrus.Infof("chunk %d is empty", j)
+			wg.Done()
+			continue
 		}
+		wg.Add(1)
+		go func(j int) {
+			failedCount := 0
+			successCount := 0
+			logrus.Infof("goroutine %d start, len: %d", j, len(chunk))
+
+			defer func() {
+				wg.Done()
+				logrus.Infof("goroutine %d end, success: %d, failed: %d", j, successCount, failedCount)
+			}()
+
+			for _, u := range chunk {
+				err := i.PersistenceAttachment(ctx, u)
+				if err != nil {
+					logrus.Errorf("persistence attachment %s failed: %v", u, err)
+					failedCount++
+					continue
+				}
+				successCount++
+			}
+		}(j)
 	}
+
+	wg.Wait()
 	return nil
 }
 

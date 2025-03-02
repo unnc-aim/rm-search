@@ -61,7 +61,7 @@ func TestIndexer_BatchPersistenceAttachmentFromAnnounce(t *testing.T) {
 	ctx := context.Background()
 	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithTika())
 	idx := NewIndexer(svcCtx)
-	err := idx.BatchPersistenceAttachmentFromAnnounce(ctx, 800, 2000)
+	err := idx.BatchPersistenceAttachmentFromAnnounce(ctx, 800, 2000, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
