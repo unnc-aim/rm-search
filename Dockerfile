@@ -18,4 +18,6 @@ COPY --from=builder /app/main .
 
 EXPOSE 8080
 
+ENV GIN_MODE=release
+
 CMD ["./main"]
