@@ -30,6 +30,8 @@ func InitContext(c Config) {
 	elastic, err := elasticsearch.NewClient(elasticsearch.Config{
 		Addresses: c.ElasticConfig.Addresses,
 		APIKey:    c.ElasticConfig.APIKey,
+		Username:  c.ElasticConfig.Username,
+		Password:  c.ElasticConfig.Password,
 	})
 	if err != nil {
 		panic(err)

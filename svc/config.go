@@ -15,6 +15,8 @@ type Config struct {
 type ElasticConfig struct {
 	Addresses []string `yaml:"Addresses"`
 	APIKey    string   `yaml:"APIKey"`
+	Username  string   `yaml:"Username"`
+	Password  string   `yaml:"Password"`
 }
 
 func ReadConfig(path string) Config {
