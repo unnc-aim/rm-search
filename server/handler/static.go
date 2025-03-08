@@ -4,9 +4,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/scutrobotlab/rm-search/common"
 	"net/http"
+	"strings"
 )
 
 func Static(c *gin.Context) {
 	path := c.Param("path")
-	c.Redirect(http.StatusMovedPermanently, common.GetStaticSource(path))
+	path = strings.TrimPrefix(path, "/")
+	source := common.GetStaticSource(path)
+	c.Redirect(http.StatusMovedPermanently, source)
 }
