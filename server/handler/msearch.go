@@ -20,16 +20,22 @@ func MSearch(c *gin.Context) {
 		remoteIP = c.RemoteIP()
 	}
 
+	var mSearchBody []byte
 	log := model.SearchLog{
-		RemoteIP:    remoteIP,
-		UserAgent:   c.Request.Header.Get("User-Agent"),
-		RequestBody: "",
-		Query:       "",
-		Status:      0,
-		Latency:     0,
+		RemoteIP:       remoteIP,
+		UserAgent:      c.Request.Header.Get("User-Agent"),
+		RequestBody:    "",
+		RequestLength:  0,
+		Query:          "",
+		Status:         0,
+		ResponseBody:   "",
+		ResponseLength: 0,
+		Latency:        0,
 	}
 	defer func() {
 		log.Latency = int32(time.Since(startTime).Milliseconds())
+		log.ResponseBody = string(mSearchBody)
+		log.ResponseLength = int32(len(mSearchBody))
 		go writeSearchLog(&log)
 	}()
 
@@ -41,6 +47,7 @@ func MSearch(c *gin.Context) {
 	}
 	logrus.Debugf("reqBody: %s", string(reqBody))
 	log.RequestBody = string(reqBody)
+	log.RequestLength = int32(len(reqBody))
 	log.Query = extractQuery(reqBody)
 
 	mSearch, err := svc.Ctx().Elastic.Msearch(bytes.NewReader(reqBody))
@@ -50,7 +57,7 @@ func MSearch(c *gin.Context) {
 		return
 	}
 
-	mSearchBody, err := io.ReadAll(mSearch.Body)
+	mSearchBody, err = io.ReadAll(mSearch.Body)
 	if err != nil {
 		log.Status = http.StatusInternalServerError
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

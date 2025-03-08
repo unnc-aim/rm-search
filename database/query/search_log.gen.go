@@ -31,8 +31,11 @@ func newSearchLog(db *gorm.DB, opts ...gen.DOOption) searchLog {
 	_searchLog.RemoteIP = field.NewString(tableName, "remote_ip")
 	_searchLog.UserAgent = field.NewString(tableName, "user_agent")
 	_searchLog.RequestBody = field.NewString(tableName, "request_body")
+	_searchLog.RequestLength = field.NewInt32(tableName, "request_length")
 	_searchLog.Query = field.NewString(tableName, "query")
 	_searchLog.Status = field.NewInt32(tableName, "status")
+	_searchLog.ResponseBody = field.NewString(tableName, "response_body")
+	_searchLog.ResponseLength = field.NewInt32(tableName, "response_length")
 	_searchLog.Latency = field.NewInt32(tableName, "latency")
 	_searchLog.CreateTime = field.NewTime(tableName, "create_time")
 	_searchLog.UpdateTime = field.NewTime(tableName, "update_time")
@@ -45,16 +48,19 @@ func newSearchLog(db *gorm.DB, opts ...gen.DOOption) searchLog {
 type searchLog struct {
 	searchLogDo
 
-	ALL         field.Asterisk
-	ID          field.Int64  // 搜索日志ID
-	RemoteIP    field.String // 远程IP
-	UserAgent   field.String // 用户代理
-	RequestBody field.String // 请求体
-	Query       field.String // 查询
-	Status      field.Int32  // 状态码
-	Latency     field.Int32  // 延迟
-	CreateTime  field.Time   // 创建时间
-	UpdateTime  field.Time   // 更新时间
+	ALL            field.Asterisk
+	ID             field.Int64  // 搜索日志ID
+	RemoteIP       field.String // 远程IP
+	UserAgent      field.String // 用户代理
+	RequestBody    field.String // 请求体
+	RequestLength  field.Int32  // 请求内容长度
+	Query          field.String // 查询
+	Status         field.Int32  // 状态码
+	ResponseBody   field.String // 响应体
+	ResponseLength field.Int32  // 响应内容长度
+	Latency        field.Int32  // 延迟
+	CreateTime     field.Time   // 创建时间
+	UpdateTime     field.Time   // 更新时间
 
 	fieldMap map[string]field.Expr
 }
@@ -75,8 +81,11 @@ func (s *searchLog) updateTableName(table string) *searchLog {
 	s.RemoteIP = field.NewString(table, "remote_ip")
 	s.UserAgent = field.NewString(table, "user_agent")
 	s.RequestBody = field.NewString(table, "request_body")
+	s.RequestLength = field.NewInt32(table, "request_length")
 	s.Query = field.NewString(table, "query")
 	s.Status = field.NewInt32(table, "status")
+	s.ResponseBody = field.NewString(table, "response_body")
+	s.ResponseLength = field.NewInt32(table, "response_length")
 	s.Latency = field.NewInt32(table, "latency")
 	s.CreateTime = field.NewTime(table, "create_time")
 	s.UpdateTime = field.NewTime(table, "update_time")
@@ -96,13 +105,16 @@ func (s *searchLog) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (s *searchLog) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 9)
+	s.fieldMap = make(map[string]field.Expr, 12)
 	s.fieldMap["id"] = s.ID
 	s.fieldMap["remote_ip"] = s.RemoteIP
 	s.fieldMap["user_agent"] = s.UserAgent
 	s.fieldMap["request_body"] = s.RequestBody
+	s.fieldMap["request_length"] = s.RequestLength
 	s.fieldMap["query"] = s.Query
 	s.fieldMap["status"] = s.Status
+	s.fieldMap["response_body"] = s.ResponseBody
+	s.fieldMap["response_length"] = s.ResponseLength
 	s.fieldMap["latency"] = s.Latency
 	s.fieldMap["create_time"] = s.CreateTime
 	s.fieldMap["update_time"] = s.UpdateTime

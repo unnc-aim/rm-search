@@ -12,15 +12,18 @@ const TableNameSearchLog = "search_log"
 
 // SearchLog mapped from table <search_log>
 type SearchLog struct {
-	ID          int64     `gorm:"column:id;type:bigint unsigned;primaryKey;autoIncrement:true;comment:搜索日志ID" json:"id"`                                                       // 搜索日志ID
-	RemoteIP    string    `gorm:"column:remote_ip;type:char(39);not null;index:idx_remote_ip,priority:1;comment:远程IP" json:"remote_ip"`                                        // 远程IP
-	UserAgent   string    `gorm:"column:user_agent;type:varchar(512);not null;comment:用户代理" json:"user_agent"`                                                                 // 用户代理
-	RequestBody string    `gorm:"column:request_body;type:text;not null;comment:请求体" json:"request_body"`                                                                      // 请求体
-	Query       string    `gorm:"column:query;type:varchar(256);not null;index:idx_query,priority:1;comment:查询" json:"query"`                                                  // 查询
-	Status      int32     `gorm:"column:status;type:int unsigned;not null;index:idx_status,priority:1;comment:状态码" json:"status"`                                              // 状态码
-	Latency     int32     `gorm:"column:latency;type:int unsigned;not null;index:idx_latency,priority:1;comment:延迟" json:"latency"`                                            // 延迟
-	CreateTime  time.Time `gorm:"column:create_time;type:timestamp(3);not null;index:idx_create_time,priority:1;default:CURRENT_TIMESTAMP(3);comment:创建时间" json:"create_time"` // 创建时间
-	UpdateTime  time.Time `gorm:"column:update_time;type:timestamp(3);not null;default:CURRENT_TIMESTAMP(3);comment:更新时间" json:"update_time"`                                  // 更新时间
+	ID             int64     `gorm:"column:id;type:bigint unsigned;primaryKey;autoIncrement:true;comment:搜索日志ID" json:"id"`                                                       // 搜索日志ID
+	RemoteIP       string    `gorm:"column:remote_ip;type:char(39);not null;index:idx_remote_ip,priority:1;comment:远程IP" json:"remote_ip"`                                        // 远程IP
+	UserAgent      string    `gorm:"column:user_agent;type:varchar(512);not null;comment:用户代理" json:"user_agent"`                                                                 // 用户代理
+	RequestBody    string    `gorm:"column:request_body;type:longtext;not null;comment:请求体" json:"request_body"`                                                                  // 请求体
+	RequestLength  int32     `gorm:"column:request_length;type:int unsigned;not null;index:idx_request_length,priority:1;comment:请求内容长度" json:"request_length"`                   // 请求内容长度
+	Query          string    `gorm:"column:query;type:varchar(256);not null;index:idx_query,priority:1;comment:查询" json:"query"`                                                  // 查询
+	Status         int32     `gorm:"column:status;type:int unsigned;not null;index:idx_status,priority:1;comment:状态码" json:"status"`                                              // 状态码
+	ResponseBody   string    `gorm:"column:response_body;type:longtext;not null;comment:响应体" json:"response_body"`                                                                // 响应体
+	ResponseLength int32     `gorm:"column:response_length;type:int unsigned;not null;index:idx_response_length,priority:1;comment:响应内容长度" json:"response_length"`                // 响应内容长度
+	Latency        int32     `gorm:"column:latency;type:int unsigned;not null;index:idx_latency,priority:1;comment:延迟" json:"latency"`                                            // 延迟
+	CreateTime     time.Time `gorm:"column:create_time;type:timestamp(3);not null;index:idx_create_time,priority:1;default:CURRENT_TIMESTAMP(3);comment:创建时间" json:"create_time"` // 创建时间
+	UpdateTime     time.Time `gorm:"column:update_time;type:timestamp(3);not null;default:CURRENT_TIMESTAMP(3);comment:更新时间" json:"update_time"`                                  // 更新时间
 }
 
 // TableName SearchLog's table name
