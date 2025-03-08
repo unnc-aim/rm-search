@@ -6,6 +6,7 @@ import (
 	"github.com/scutrobotlab/rm-search/database/query"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"net/http"
 )
 
 var global *Context
@@ -43,5 +44,6 @@ func InitContext(c Config) {
 		Db:      db,
 		Query:   query.Use(db),
 		Elastic: elastic,
+		Tika:    tika.NewClient(http.DefaultClient, c.TikaHost),
 	}
 }
