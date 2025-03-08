@@ -22,6 +22,7 @@ var mapping []byte
 // RecreateIndex 重建索引
 func (i *Indexer) RecreateIndex(ctx context.Context) error {
 	logrus.Infof("recreate index start")
+
 	index, err := i.CreateIndex()
 	if err != nil {
 		return errors.Wrapf(err, "create index error")
@@ -45,6 +46,12 @@ func (i *Indexer) RecreateIndex(ctx context.Context) error {
 		return errors.Wrapf(err, "scroll and index attachment error")
 	}
 	logrus.Infof("index attachment success, count: %d", count)
+
+	err = i.UpdateAlias(index)
+	if err != nil {
+		return errors.Wrapf(err, "update alias error")
+	}
+	logrus.Infof("update alias success")
 
 	err = i.DeleteUnusedIndices()
 	if err != nil {
@@ -73,17 +80,60 @@ func (i *Indexer) CreateIndex() (string, error) {
 		return "", errors.Errorf("create index failed, status code: %d", resp.StatusCode)
 	}
 
+	return index, nil
+}
+
+// PutAlias 创建别名
+func (i *Indexer) PutAlias(index string) error {
+	elastic := i.SvcCtx.Elastic
+
 	// 创建别名
-	resp, err = elastic.Indices.PutAlias([]string{index}, common.IndexEntityName)
+	resp, err := elastic.Indices.PutAlias([]string{index}, common.IndexEntityName)
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return "", errors.Errorf("create alias failed, status code: %d", resp.StatusCode)
+		return errors.Errorf("put alias failed, status code: %d", resp.StatusCode)
 	}
 
-	return index, nil
+	return nil
+}
+
+// UpdateAlias 替换别名
+func (i *Indexer) UpdateAlias(newIndex string) error {
+	elastic := i.SvcCtx.Elastic
+
+	// 更新别名
+	resp, err := elastic.Indices.UpdateAliases(nil, func(req *esapi.IndicesUpdateAliasesRequest) {
+		actions := []map[string]interface{}{
+			{
+				"remove": map[string]interface{}{
+					"alias":   common.IndexEntityName,
+					"indices": "_all",
+				},
+			},
+			{
+				"add": map[string]interface{}{
+					"alias":   common.IndexEntityName,
+					"indices": newIndex,
+				},
+			},
+		}
+		body := map[string]interface{}{
+			"actions": actions,
+		}
+		req.Body = bytes.NewReader(common.MustMarshal(body))
+	})
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return errors.Errorf("update aliases failed, status code: %d", resp.StatusCode)
+	}
+
+	return nil
 }
 
 // DeleteUnusedIndices 删除未使用的索引

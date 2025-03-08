@@ -6,6 +6,15 @@ import (
 	"reflect"
 )
 
+// MustMarshal 序列化
+func MustMarshal(v interface{}) []byte {
+	b, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
 // CompareJSON 比较两个 JSON 并打印不一致的位置
 func CompareJSON(json1, json2 []byte, ignorePaths []string) bool {
 	var v1, v2 interface{}
