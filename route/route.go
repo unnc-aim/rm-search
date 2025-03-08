@@ -9,6 +9,7 @@ func Run() {
 
 	r.GET("/ping", Ping)
 	r.POST("/_msearch", MSearch)
+	r.GET("/static/*path", Static)
 
 	err := r.Run()
 	if err != nil {
