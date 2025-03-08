@@ -80,6 +80,9 @@ func writeSearchLog(log *model.SearchLog) {
 func extractQuery(reqBody []byte) string {
 	objects := strings.Split(string(reqBody), "\n")
 	for _, obj := range objects {
+		if obj == "" {
+			continue
+		}
 		var search map[string]interface{}
 		err := json.Unmarshal([]byte(obj), &search)
 		if err != nil {
