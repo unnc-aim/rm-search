@@ -12,9 +12,12 @@ var SourceToSelf = map[string]string{
 // RedirectStatic 将第三方静态资源重定向到自己的 CDN
 func RedirectStatic(url string) string {
 	for k, v := range SourceToSelf {
-		url = strings.ReplaceAll(url, k, v)
+		if strings.Contains(url, k) {
+			url = strings.ReplaceAll(url, k, v)
+			return fmt.Sprintf("/api/static/%s", url)
+		}
 	}
-	return fmt.Sprintf("/api/static/%s", url)
+	return url
 }
 
 // RedirectStaticIfProd 将第三方静态资源重定向到自己的 CDN
