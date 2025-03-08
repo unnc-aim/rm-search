@@ -5,7 +5,7 @@ import (
 )
 
 var SourceToSelf = map[string]string{
-	"https://rm-static.djicdn.com": "/rm-static.djicdn.com",
+	"https://rm-static.djicdn.com": "/api/static/rm-static.djicdn.com",
 }
 
 // RedirectStatic 将第三方静态资源重定向到自己的 CDN
