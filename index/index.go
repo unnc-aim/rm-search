@@ -11,12 +11,50 @@ import (
 	"github.com/scutrobotlab/rm-search/common"
 	"github.com/sirupsen/logrus"
 	"io"
+	"math"
 	"sort"
 	"time"
 )
 
 //go:embed mapping/rm-search.json
 var mapping []byte
+
+// RecreateIndex 重建索引
+func (i *Indexer) RecreateIndex(ctx context.Context) error {
+	logrus.Infof("recreate index start")
+	index, err := i.CreateIndex()
+	if err != nil {
+		return errors.Wrapf(err, "create index error")
+	}
+	logrus.Infof("create index %s success", index)
+
+	count, err := i.ScrollAndIndexBbsPost(ctx, index, 1, math.MaxInt64)
+	if err != nil {
+		return errors.Wrapf(err, "scroll and index bbs post error")
+	}
+	logrus.Infof("index bbs post success, count: %d", count)
+
+	count, err = i.ScrollAndIndexAnnounce(ctx, index, 1, math.MaxInt64)
+	if err != nil {
+		return errors.Wrapf(err, "scroll and index announce error")
+	}
+	logrus.Infof("index announce success, count: %d", count)
+
+	count, err = i.ScrollAndIndexAttachment(ctx, index, 1, math.MaxInt64)
+	if err != nil {
+		return errors.Wrapf(err, "scroll and index attachment error")
+	}
+	logrus.Infof("index attachment success, count: %d", count)
+
+	err = i.DeleteUnusedIndices()
+	if err != nil {
+		return errors.Wrapf(err, "delete unused indices error")
+	}
+	logrus.Infof("delete unused indices success")
+
+	logrus.Infof("recreate index success")
+	return nil
+}
 
 // CreateIndex 创建索引
 func (i *Indexer) CreateIndex() (string, error) {

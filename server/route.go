@@ -17,6 +17,7 @@ func Run() {
 	g := r.Group("/admin", middleware.AdminAuthMiddleware())
 	{
 		g.GET("/ping", admin.Ping)
+		g.POST("/recreate-index", admin.RecreateIndex)
 	}
 
 	err := r.Run()
