@@ -49,3 +49,22 @@ CREATE TABLE IF NOT EXISTS `attachment`
     UNIQUE KEY `idx_url` (`url`),
     UNIQUE KEY `idx_sha256` (`sha256`)
 ) COMMENT '附件';
+
+CREATE TABLE IF NOT EXISTS `search_log`
+(
+    `id`           bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '搜索日志ID',
+    `remote_ip`    char(39)        NOT NULL DEFAULT '' COMMENT '远程IP',
+    `user_agent`   varchar(512)    NOT NULL DEFAULT '' COMMENT '用户代理',
+    `request_body` text            NOT NULL COMMENT '请求体',
+    `query`        varchar(256)    NOT NULL DEFAULT '' COMMENT '查询',
+    `status`       int unsigned    NOT NULL DEFAULT 0 COMMENT '状态码',
+    `latency`      int unsigned    NOT NULL DEFAULT 0 COMMENT '延迟',
+    `create_time`  timestamp(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `update_time`  timestamp(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_remote_ip` (`remote_ip`),
+    KEY `idx_query` (`query`),
+    KEY `idx_status` (`status`),
+    KEY `idx_latency` (`latency`),
+    KEY `idx_create_time` (`create_time`)
+) COMMENT '搜索日志';
