@@ -1,4 +1,4 @@
-package route
+package admin
 
 import "github.com/gin-gonic/gin"
 
