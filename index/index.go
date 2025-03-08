@@ -10,9 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/scutrobotlab/rm-search/common"
 	"github.com/sirupsen/logrus"
-	"io"
 	"math"
-	"sort"
 	"time"
 )
 
@@ -140,48 +138,62 @@ func (i *Indexer) UpdateAlias(newIndex string) error {
 func (i *Indexer) DeleteUnusedIndices() error {
 	elastic := i.SvcCtx.Elastic
 
-	// 只保留 rm-search 最新的索引
-	resp, err := elastic.Indices.GetAlias(elastic.Indices.GetAlias.WithName(common.IndexEntityName))
+	// 获取所有以 rm-search- 开头的索引
+	resp, err := elastic.Cat.Indices(
+		elastic.Cat.Indices.WithFormat("json"),
+		elastic.Cat.Indices.WithIndex(fmt.Sprintf("%s-*", common.IndexEntityName)),
+	)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "get indices failed")
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return errors.Errorf("get alias failed, status code: %d", resp.StatusCode)
+		return errors.Errorf("get indices failed, status code: %d", resp.StatusCode)
 	}
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
+	var indices []map[string]interface{}
+	if err = json.NewDecoder(resp.Body).Decode(&indices); err != nil {
 		return err
 	}
 
-	var data map[string]interface{}
-	err = json.Unmarshal(body, &data)
+	// 获取别名 rm-search 关联的所有索引
+	aliasResp, err := elastic.Indices.GetAlias(elastic.Indices.GetAlias.WithName(common.IndexEntityName))
 	if err != nil {
 		return err
 	}
-
-	var indices []string
-	for index := range data {
-		indices = append(indices, index)
-	}
-	if len(indices) <= 1 {
-		return nil
+	defer aliasResp.Body.Close()
+	if aliasResp.StatusCode != 200 {
+		return errors.Errorf("get alias failed, status code: %d", aliasResp.StatusCode)
 	}
 
-	// 按照创建时间排序
-	sort.Strings(indices)
+	var aliasIndices map[string]interface{}
+	if err := json.NewDecoder(aliasResp.Body).Decode(&aliasIndices); err != nil {
+		return err
+	}
 
-	// 删除旧索引
-	for _, index := range indices[:len(indices)-1] {
-		_, err = elastic.Indices.Delete([]string{index})
-		if err != nil {
-			logrus.Errorf("delete index %s failed: %v", index, err)
-			continue
+	// 找出所有未绑定到别名 rm-search 的索引
+	var unusedIndices []string
+	for _, index := range indices {
+		indexName := index["index"].(string)
+		if _, exists := aliasIndices[indexName]; !exists {
+			unusedIndices = append(unusedIndices, indexName)
 		}
-		logrus.Infof("index %s deleted", index)
 	}
-	logrus.Infof("keep index %s", indices[len(indices)-1])
+
+	// 删除这些未使用的索引
+	if len(unusedIndices) > 0 {
+		deleteResp, err := elastic.Indices.Delete(unusedIndices)
+		if err != nil {
+			return err
+		}
+		defer deleteResp.Body.Close()
+		if deleteResp.StatusCode != 200 {
+			return errors.Errorf("delete indices failed, status code: %d", deleteResp.StatusCode)
+		}
+		logrus.Infof("delete %d unused indices", len(unusedIndices))
+	} else {
+		logrus.Infof("no unused indices")
+	}
 
 	return nil
 }
