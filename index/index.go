@@ -210,6 +210,7 @@ func (i *Indexer) IndexDoc(index string, id string, doc []byte) error {
 	return nil
 }
 
+// ScrollAndIndexBbsPost 滚动查询并索引帖子
 func (i *Indexer) ScrollAndIndexBbsPost(ctx context.Context, index string, startId, endId int64) (int64, error) {
 	p := i.SvcCtx.Query.BbsPost
 
