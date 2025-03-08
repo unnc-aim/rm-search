@@ -120,7 +120,7 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 	if post.AuthorNickname != nil {
 		authorNickname = *post.AuthorNickname
 	}
-	authorAvatar = post.AuthorAvatar
+	authorAvatar = common.RedirectStaticIfProd(post.AuthorAvatar)
 
 	createTime := time.Time(post.CreateAt).UnixMilli()
 	updateTime := time.Time(post.UpdateAt).UnixMilli()
