@@ -6,3 +6,4 @@ ElasticConfig:
   Username: "ELASTIC_USERNAME"
   Password: "ELASTIC_PASSWORD"
 TikaHost: "http://localhost:9998"
+AdminToken: "ADMIN_TOKEN"

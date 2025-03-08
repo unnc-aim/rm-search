@@ -11,6 +11,7 @@ import (
 var global *Context
 
 type Context struct {
+	Config  Config
 	Db      *gorm.DB
 	Query   *query.Query
 	Elastic *elasticsearch.Client
@@ -38,6 +39,7 @@ func InitContext(c Config) {
 	}
 
 	global = &Context{
+		Config:  c,
 		Db:      db,
 		Query:   query.Use(db),
 		Elastic: elastic,

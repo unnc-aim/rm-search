@@ -10,6 +10,7 @@ type Config struct {
 	DataSource    string        `yaml:"DataSource"`
 	ElasticConfig ElasticConfig `yaml:"ElasticConfig"`
 	TikaHost      string        `yaml:"TikaHost"`
+	AdminToken    string        `yaml:"AdminToken"`
 }
 
 type ElasticConfig struct {
