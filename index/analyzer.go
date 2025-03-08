@@ -1,13 +1,18 @@
 package index
 
 import (
+	_ "embed"
 	"fmt"
 	"github.com/go-ego/gse"
+	"github.com/sirupsen/logrus"
 	"strings"
 	"unicode/utf8"
 )
 
 var Seg gse.Segmenter
+
+//go:embed dict/college_name.txt
+var collegeNameDict string
 
 func init() {
 	LoadDict()
@@ -15,10 +20,18 @@ func init() {
 
 func LoadDict() {
 	Seg = gse.Segmenter{}
-	err := Seg.LoadDict("zh,dict/college_name.txt")
+
+	err := Seg.LoadDictEmbed("zh")
 	if err != nil {
 		panic(err)
 	}
+	logrus.Info("Load dict zh success")
+
+	err = Seg.LoadDictStr(collegeNameDict)
+	if err != nil {
+		panic(err)
+	}
+	logrus.Info("Load dict college_name success")
 }
 
 var schoolKeywords = []string{"大学", "学院"}
