@@ -7,3 +7,7 @@ ElasticConfig:
   Password: "ELASTIC_PASSWORD"
 TikaHost: "http://localhost:9998"
 AdminToken: "ADMIN_TOKEN"
+SearchLog:
+  Enabled: true
+  DisabledRequestBody: false
+  DisabledResponseBody: false

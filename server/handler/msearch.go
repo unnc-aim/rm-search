@@ -15,6 +15,7 @@ import (
 
 func MSearch(c *gin.Context) {
 	startTime := time.Now()
+	conf := svc.Ctx().Config
 	var remoteIP string
 	forwardedFor := c.Request.Header.Get("X-Forwarded-For")
 	if forwardedFor != "" {
@@ -36,12 +37,16 @@ func MSearch(c *gin.Context) {
 		ResponseLength: 0,
 		Latency:        0,
 	}
-	defer func() {
-		log.Latency = int32(time.Since(startTime).Milliseconds())
-		log.ResponseBody = string(mSearchBody)
-		log.ResponseLength = int32(len(mSearchBody))
-		go writeSearchLog(&log)
-	}()
+	if conf.SearchLog.Enabled {
+		defer func() {
+			log.Latency = int32(time.Since(startTime).Milliseconds())
+			if !conf.SearchLog.DisabledResponseBody {
+				log.ResponseBody = string(mSearchBody)
+			}
+			log.ResponseLength = int32(len(mSearchBody))
+			go writeSearchLog(&log)
+		}()
+	}
 
 	reqBody, err := io.ReadAll(c.Request.Body)
 	if err != nil {
@@ -50,9 +55,13 @@ func MSearch(c *gin.Context) {
 		return
 	}
 	logrus.Debugf("reqBody: %s", string(reqBody))
-	log.RequestBody = string(reqBody)
-	log.RequestLength = int32(len(reqBody))
-	log.Query = extractQuery(reqBody)
+	if conf.SearchLog.Enabled {
+		if !conf.SearchLog.DisabledRequestBody {
+			log.RequestBody = string(reqBody)
+		}
+		log.RequestLength = int32(len(reqBody))
+		log.Query = extractQuery(reqBody)
+	}
 
 	mSearch, err := svc.Ctx().Elastic.Msearch(bytes.NewReader(reqBody))
 	if err != nil {

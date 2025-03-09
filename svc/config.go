@@ -7,10 +7,11 @@ import (
 )
 
 type Config struct {
-	DataSource    string        `yaml:"DataSource"`
-	ElasticConfig ElasticConfig `yaml:"ElasticConfig"`
-	TikaHost      string        `yaml:"TikaHost"`
-	AdminToken    string        `yaml:"AdminToken"`
+	DataSource    string          `yaml:"DataSource"`
+	ElasticConfig ElasticConfig   `yaml:"ElasticConfig"`
+	TikaHost      string          `yaml:"TikaHost"`
+	AdminToken    string          `yaml:"AdminToken"`
+	SearchLog     SearchLogConfig `yaml:"SearchLog"`
 }
 
 type ElasticConfig struct {
@@ -18,6 +19,12 @@ type ElasticConfig struct {
 	APIKey    string   `yaml:"APIKey"`
 	Username  string   `yaml:"Username"`
 	Password  string   `yaml:"Password"`
+}
+
+type SearchLogConfig struct {
+	Enabled              bool `yaml:"Enabled"`
+	DisabledRequestBody  bool `yaml:"DisabledRequestBody"`
+	DisabledResponseBody bool `yaml:"DisabledResponseBody"`
 }
 
 func ReadConfig(path string) Config {
