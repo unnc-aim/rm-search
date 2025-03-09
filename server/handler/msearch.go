@@ -15,9 +15,11 @@ import (
 
 func MSearch(c *gin.Context) {
 	startTime := time.Now()
-	remoteIP := c.Request.Header.Get("X-Real-Ip")
-	if remoteIP == "" {
-		remoteIP = c.RemoteIP()
+	var remoteIP string
+	forwardedFor := c.Request.Header.Get("X-Forwarded-For")
+	if forwardedFor != "" {
+		remoteIP = strings.Split(forwardedFor, ", ")[0]
+		remoteIP = strings.TrimSpace(remoteIP)
 	}
 
 	var mSearchBody []byte
