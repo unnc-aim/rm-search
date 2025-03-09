@@ -20,6 +20,8 @@ func MSearch(c *gin.Context) {
 	if forwardedFor != "" {
 		remoteIP = strings.Split(forwardedFor, ", ")[0]
 		remoteIP = strings.TrimSpace(remoteIP)
+	} else {
+		remoteIP = c.RemoteIP()
 	}
 
 	var mSearchBody []byte
