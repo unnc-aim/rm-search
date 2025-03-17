@@ -12,6 +12,7 @@ import (
 	"github.com/scutrobotlab/rm-search/database/model"
 	"github.com/sirupsen/logrus"
 	"math"
+	"math/rand"
 	"net/url"
 	"path"
 	"sync"
@@ -123,15 +124,21 @@ func (i *Indexer) BatchPersistenceIds(ctx context.Context, ids []int64, goroutin
 				logrus.Infof("goroutine %d end, success: %d, failed: %d", j, successCount, failedCount)
 			}()
 
-			for _, id := range chunk {
+			for k := 0; k < len(chunk); k++ {
+				id := chunk[k]
 				err := i.Persistence(ctx, id)
 				if err != nil {
-					logrus.Errorf("persistence post %d failed: %v", id, err)
 					failedCount++
 					if errors.Is(err, ErrStatusMethodNotAllowed) {
-						logrus.Errorf("get post %d failed: %v, break", id, err)
-						break
+						duration := time.Second * time.Duration(1+rand.Int63n(30))
+						logrus.Warnf("failed to persist id %d: %v, sleep %vs and retry", id, err, duration.Seconds())
+						time.Sleep(duration)
+					} else {
+						duration := time.Second * 60
+						logrus.Errorf("failed to persist id %d: %v, sleep %vs and retry", id, err, duration.Seconds())
+						time.Sleep(duration)
 					}
+					k--
 					continue
 				}
 				successCount++
