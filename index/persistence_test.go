@@ -16,6 +16,16 @@ func TestIndexer_Persistence(t *testing.T) {
 	}
 }
 
+func TestIndexer_BatchPersistenceRange(t *testing.T) {
+	ctx := context.Background()
+	svcCtx := svc.NewContextForTest(svc.WithDb())
+	idx := NewIndexer(svcCtx)
+	err := idx.BatchPersistenceRange(ctx, 0, 10_0000, 50)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestIndexer_BatchPersistenceRangeIfExist(t *testing.T) {
 	ctx := context.Background()
 	svcCtx := svc.NewContextForTest(svc.WithDb())
@@ -30,7 +40,7 @@ func TestIndexer_BatchPersistenceRangeIfNotExist(t *testing.T) {
 	ctx := context.Background()
 	svcCtx := svc.NewContextForTest(svc.WithDb())
 	idx := NewIndexer(svcCtx)
-	err := idx.BatchPersistenceRangeIfNotExist(ctx, 1, 10000, 10)
+	err := idx.BatchPersistenceRangeIfNotExist(ctx, 10_0000, 60_0000, 25)
 	if err != nil {
 		t.Fatal(err)
 	}
