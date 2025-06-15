@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/scutrobotlab/rm-search/common"
+	"github.com/scutrobotlab/rm-search/job"
 	"github.com/scutrobotlab/rm-search/server"
 	"github.com/scutrobotlab/rm-search/svc"
 	"github.com/sirupsen/logrus"
@@ -15,5 +16,6 @@ func main() {
 	c := svc.ReadConfig("etc/config.yaml")
 	svc.InitContext(c)
 
+	job.NewBase(svc.Ctx()).Start()
 	server.Run()
 }
