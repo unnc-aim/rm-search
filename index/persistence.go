@@ -216,11 +216,9 @@ func (i *Indexer) PersistenceLatest(ctx context.Context, category string) error 
 	logrus.Infof("checked %d posts for category %s, need to update: %d (unchecked: %d, newly founded: %d, outdated: %d)",
 		len(ids), category, len(needUpdateIds), uncheckedCount, newlyFoundedCount, outdatedCount)
 	if len(needUpdateIds) == 0 {
-		logrus.Infof("no latest posts need to be persisted for category %s", category)
 		return nil
 	}
 
-	logrus.Infof("found %d posts need to be persisted for category %s", len(needUpdateIds), category)
 	return i.BatchPersistenceIds(ctx, needUpdateIds, 5)
 }
 
