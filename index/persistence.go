@@ -25,6 +25,7 @@ var (
 	PostCount     = atomic.Int64{}
 	TotalCount    = atomic.Int64{}
 	LastPrintTime = time.Now()
+	StartTime     = time.Now()
 )
 
 // BatchPersistenceRangeIfExist 批量持久化帖子，如果帖子存在
@@ -163,7 +164,7 @@ func (i *Indexer) Persistence(ctx context.Context, id int64) error {
 	TotalCount.Add(1)
 	if Mutex.TryLock() {
 		if time.Since(LastPrintTime) > time.Second {
-			logrus.Infof("QPS: %d, Total: %d", PostCount.Load(), TotalCount.Load())
+			logrus.Infof("Duration: %.1f s, QPS: %d, Total: %d", time.Since(StartTime).Seconds(), PostCount.Load(), TotalCount.Load())
 			LastPrintTime = time.Now()
 			PostCount.Store(0)
 		}
