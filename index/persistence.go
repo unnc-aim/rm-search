@@ -119,7 +119,7 @@ func (i *Indexer) BatchPersistenceIds(ctx context.Context, ids []int64, goroutin
 			successCount := 0
 			_startId := chunk[0]
 			_endId := chunk[len(chunk)-1]
-			logrus.Infof("goroutine %d start, [%d, %d), len: %d", j, _startId, _endId, len(chunk))
+			logrus.Infof("goroutine %d start, %d => %d, len: %d", j, _startId, _endId, len(chunk))
 
 			defer func() {
 				wg.Done()
