@@ -10,6 +10,7 @@ import (
 	"golang.org/x/net/html"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -19,10 +20,18 @@ var (
 	ErrStatusNotFound         = errors.New("status not found")
 )
 
+var client = &http.Client{
+	Transport: &http.Transport{
+		Proxy: func(*http.Request) (*url.URL, error) {
+			return url.Parse("http://localhost:7890")
+		},
+	},
+}
+
 // GetBbsPost 获取帖子信息
 func GetBbsPost(id int64) (ret *BbsPostResp, err error) {
-	url := fmt.Sprintf("https://bbs.robomaster.com/developers-server/rest/posts/info/%d", id)
-	resp, err := http.Post(url, "", nil)
+	url1 := fmt.Sprintf("https://bbs.robomaster.com/developers-server/rest/posts/info/%d", id)
+	resp, err := client.Post(url1, "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -45,13 +54,13 @@ func GetBbsPost(id int64) (ret *BbsPostResp, err error) {
 
 // GetBbsPostList 获取帖子列表
 func GetBbsPostList(req *BbsPostListReq) (ret *BbsPostListResp, err error) {
-	const url = "https://bbs.robomaster.com/developers-server/rest/posts/list"
+	const url1 = "https://bbs.robomaster.com/developers-server/rest/posts/list"
 	body, err := json.Marshal(req)
 	if err != nil {
 		return nil, errors.Wrapf(err, "marshal request body")
 	}
 
-	resp, err := http.Post(url, "application/json", bytes.NewReader(body))
+	resp, err := client.Post(url1, "application/json", bytes.NewReader(body))
 	if err != nil {
 		return nil, errors.Wrapf(err, "post request")
 	}
@@ -74,8 +83,8 @@ func GetBbsPostList(req *BbsPostListReq) (ret *BbsPostListResp, err error) {
 
 // GetAnnounce 获取公告信息
 func GetAnnounce(id int64) (ret *Announce, err error) {
-	url := fmt.Sprintf("https://www.robomaster.com/zh-CN/resource/pages/announcement/%d", id)
-	resp, err := http.Get(url)
+	url1 := fmt.Sprintf("https://www.robomaster.com/zh-CN/resource/pages/announcement/%d", id)
+	resp, err := client.Get(url1)
 	if err != nil {
 		return
 	}
