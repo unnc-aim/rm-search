@@ -2,6 +2,55 @@ package index
 
 import "time"
 
+type BbsPostListReq struct {
+	PageSize int                  `json:"pageSize"`
+	PageNo   int                  `json:"pageNo"`
+	Filter   BbsPostListReqFilter `json:"filter"`
+}
+
+type BbsPostListReqFilter struct {
+	Category    string      `json:"category"`
+	TagIds      []int64     `json:"tagIds"`
+	SortByViews interface{} `json:"sortByViews"`
+	Official    interface{} `json:"official"`
+	Marrow      interface{} `json:"marrow"`
+}
+
+type BbsPostListResp RestResp[BbsPostListData]
+
+type BbsPostListData struct {
+	List  []BbsPostListItem `json:"list"`
+	Total int               `json:"total"`
+	Size  int               `json:"size"`
+}
+
+type BbsPostListItem struct {
+	History        bool      `json:"history"`
+	Official       bool      `json:"official"`
+	Top            bool      `json:"top"`
+	Marrow         bool      `json:"marrow"`
+	HeadImg        string    `json:"headImg"`
+	Id             int       `json:"id"`
+	Category       string    `json:"category"`
+	CategoryDesc   string    `json:"categoryDesc"`
+	Title          string    `json:"title"`
+	Introduction   string    `json:"introduction"`
+	AuthorId       int       `json:"authorId"`
+	AuthorNickname string    `json:"authorNickname"`
+	AuthorAvatar   string    `json:"authorAvatar"`
+	CreateAt       time.Time `json:"createAt"`
+	Views          int       `json:"views"`
+	Approvals      int       `json:"approvals"`
+	Comments       int       `json:"comments"`
+	Tags           []Tag     `json:"tags"`
+	Solution       *Solution `json:"solution"`
+	SolutionDesc   string    `json:"solutionDesc"`
+	State          string    `json:"state"`
+	StateDesc      string    `json:"stateDesc"`
+	UpdateAt       time.Time `json:"updateAt"`
+	WikiId         int64     `json:"wikiId"`
+}
+
 type BbsPostResp RestResp[any]
 
 type RestResp[T any] struct {

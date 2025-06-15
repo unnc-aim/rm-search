@@ -43,6 +43,35 @@ func GetBbsPost(id int64) (ret *BbsPostResp, err error) {
 	return ret, nil
 }
 
+// GetBbsPostList 获取帖子列表
+func GetBbsPostList(req *BbsPostListReq) (ret *BbsPostListResp, err error) {
+	const url = "https://bbs.robomaster.com/developers-server/rest/posts/list"
+	body, err := json.Marshal(req)
+	if err != nil {
+		return nil, errors.Wrapf(err, "marshal request body")
+	}
+
+	resp, err := http.Post(url, "application/json", bytes.NewReader(body))
+	if err != nil {
+		return nil, errors.Wrapf(err, "post request")
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		if resp.StatusCode == 405 {
+			return nil, ErrStatusMethodNotAllowed
+		}
+		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(&ret)
+	if err != nil {
+		return nil, errors.Wrapf(err, "decode response body")
+	}
+
+	return ret, nil
+}
+
 // GetAnnounce 获取公告信息
 func GetAnnounce(id int64) (ret *Announce, err error) {
 	url := fmt.Sprintf("https://www.robomaster.com/zh-CN/resource/pages/announcement/%d", id)

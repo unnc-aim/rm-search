@@ -1,6 +1,7 @@
 package index
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -24,6 +25,33 @@ func TestGetBbsPost2(t *testing.T) {
 		if post.Data != nil {
 			t.Logf("Data: %+v", post.Data)
 		}
+	}
+}
+
+func TestGetBbsPostList(t *testing.T) {
+	categories := []string{
+		"ARTICLE",
+		"FAQ",
+		"WIKI",
+	}
+	for _, category := range categories {
+		fmt.Printf("Testing category: %s\n", category)
+		resp, err := GetBbsPostList(&BbsPostListReq{
+			PageSize: 10,
+			PageNo:   0,
+			Filter: BbsPostListReqFilter{
+				Category: category,
+			},
+		})
+		if err != nil {
+			t.Fatalf("GetBbsPostList error: %v", err)
+		}
+
+		t.Logf("BbsPostList: %+v", resp)
+		for _, item := range resp.Data.List {
+			t.Logf("Item: %+v", item)
+		}
+		println()
 	}
 }
 
