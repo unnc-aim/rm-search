@@ -30,18 +30,18 @@ type BbsPostListItem struct {
 	Top            bool      `json:"top"`
 	Marrow         bool      `json:"marrow"`
 	HeadImg        string    `json:"headImg"`
-	Id             int       `json:"id"`
+	Id             int64     `json:"id"`
 	Category       string    `json:"category"`
 	CategoryDesc   string    `json:"categoryDesc"`
 	Title          string    `json:"title"`
 	Introduction   string    `json:"introduction"`
-	AuthorId       int       `json:"authorId"`
+	AuthorId       int64     `json:"authorId"`
 	AuthorNickname string    `json:"authorNickname"`
 	AuthorAvatar   string    `json:"authorAvatar"`
 	CreateAt       time.Time `json:"createAt"`
-	Views          int       `json:"views"`
-	Approvals      int       `json:"approvals"`
-	Comments       int       `json:"comments"`
+	Views          int64     `json:"views"`
+	Approvals      int64     `json:"approvals"`
+	Comments       int64     `json:"comments"`
 	Tags           []Tag     `json:"tags"`
 	Solution       *Solution `json:"solution"`
 	SolutionDesc   string    `json:"solutionDesc"`
