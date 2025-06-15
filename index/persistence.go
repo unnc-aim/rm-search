@@ -152,6 +152,78 @@ func (i *Indexer) BatchPersistenceIds(ctx context.Context, ids []int64, goroutin
 	return nil
 }
 
+// PersistenceLatest 持久化最新帖子
+func (i *Indexer) PersistenceLatest(ctx context.Context, category string) error {
+	b := i.SvcCtx.Query.BbsPost
+
+	resp, err := GetBbsPostList(&BbsPostListReq{
+		PageSize: 100,
+		PageNo:   1,
+		Filter: BbsPostListReqFilter{
+			Category: category,
+		},
+	})
+	if err != nil {
+		return errors.Wrapf(err, "get latest posts for category %s failed", category)
+	}
+	if resp.Code != 0 {
+		return errors.Errorf("get latest posts for category %s failed, code: %d", category, resp.Code)
+	}
+
+	var ids []int64
+	for _, post := range resp.Data.List {
+		ids = append(ids, post.Id)
+	}
+	if len(ids) == 0 {
+		logrus.Infof("no latest posts found for category %s", category)
+		return nil
+	}
+
+	// 查询已经持久化的帖子
+	foundPosts, err := b.WithContext(ctx).Where(b.ID.In(ids...)).Find()
+	if err != nil {
+		return errors.Wrapf(err, "find posts for category %s failed", category)
+	}
+	foundPostMap := lo.SliceToMap(foundPosts, func(item *model.BbsPost) (int64, *model.BbsPost) {
+		return item.ID, item
+	})
+
+	var needUpdateIds []int64   // 需要更新的帖子 ID
+	var uncheckedCount int64    // 此前未检查的帖子数量
+	var newlyFoundedCount int64 // 新发现的帖子数量
+	var outdatedCount int64     // 过时的帖子数量
+	for _, post := range resp.Data.List {
+		postModel, ok := foundPostMap[post.Id]
+		if !ok {
+			// 如果帖子不存在，则需要持久化
+			needUpdateIds = append(needUpdateIds, post.Id)
+			uncheckedCount++
+			continue
+		}
+		if postModel.Code != 0 {
+			// 如果帖子存在但是 Code 不为 0，则需要更新
+			needUpdateIds = append(needUpdateIds, post.Id)
+			newlyFoundedCount++
+			continue
+		}
+		if postModel.UpdateTime.Before(post.UpdateAt) {
+			// 如果帖子存在但是更新时间比最新的帖子早，则需要更新
+			needUpdateIds = append(needUpdateIds, post.Id)
+			outdatedCount++
+			continue
+		}
+	}
+	logrus.Infof("checked %d posts for category %s, need to update: %d (unchecked: %d, newly founded: %d, outdated: %d)",
+		len(ids), category, len(needUpdateIds), uncheckedCount, newlyFoundedCount, outdatedCount)
+	if len(needUpdateIds) == 0 {
+		logrus.Infof("no latest posts need to be persisted for category %s", category)
+		return nil
+	}
+
+	logrus.Infof("found %d posts need to be persisted for category %s", len(needUpdateIds), category)
+	return i.BatchPersistenceIds(ctx, needUpdateIds, 5)
+}
+
 // Persistence 持久化帖子
 func (i *Indexer) Persistence(ctx context.Context, id int64) error {
 	p := i.SvcCtx.Query.BbsPost
