@@ -12,6 +12,7 @@ type Config struct {
 	TikaHost      string          `yaml:"TikaHost"`
 	AdminToken    string          `yaml:"AdminToken"`
 	SearchLog     SearchLogConfig `yaml:"SearchLog"`
+	Proxy         ProxyConfig     `yaml:"Proxy"`
 }
 
 type ElasticConfig struct {
@@ -25,6 +26,11 @@ type SearchLogConfig struct {
 	Enabled              bool `yaml:"Enabled"`
 	DisabledRequestBody  bool `yaml:"DisabledRequestBody"`
 	DisabledResponseBody bool `yaml:"DisabledResponseBody"`
+}
+
+type ProxyConfig struct {
+	Enabled bool   `yaml:"Enabled"`
+	URL     string `yaml:"URL"`
 }
 
 func ReadConfig(path string) Config {

@@ -20,13 +20,16 @@ var (
 	ErrStatusNotFound         = errors.New("status not found")
 )
 
-var client = &http.Client{
-	Transport: &http.Transport{
-		Proxy: func(*http.Request) (*url.URL, error) {
-			return url.Parse("http://localhost:7890")
+var (
+	ProxyURL *url.URL
+	client   = &http.Client{
+		Transport: &http.Transport{
+			Proxy: func(*http.Request) (*url.URL, error) {
+				return ProxyURL, nil
+			},
 		},
-	},
-}
+	}
+)
 
 // GetBbsPost 获取帖子信息
 func GetBbsPost(id int64) (ret *BbsPostResp, err error) {

@@ -11,3 +11,6 @@ SearchLog:
   Enabled: true
   DisabledRequestBody: false
   DisabledResponseBody: false
+Proxy:
+  Enabled: false
+  URL: "http://localhost:7890"
