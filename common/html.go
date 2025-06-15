@@ -27,10 +27,10 @@ func HTMLNodeToText(n *html.Node) (string, error) {
 		if n.Type == html.TextNode {
 			// 去除前后空白字符并追加到文本构建器中
 			text.WriteString(strings.TrimSpace(n.Data))
-			// 如果文本不为空，追加一个空格
-			if text.Len() > 0 && !strings.HasSuffix(text.String(), " ") {
-				text.WriteByte(' ')
-			}
+			//// 如果文本不为空，追加一个空格
+			//if text.Len() > 0 && !strings.HasSuffix(text.String(), " ") {
+			//	text.WriteByte(' ')
+			//}
 		}
 		// 递归遍历子节点
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
