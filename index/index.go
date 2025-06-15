@@ -9,6 +9,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/pkg/errors"
 	"github.com/scutrobotlab/rm-search/common"
+	"github.com/scutrobotlab/rm-search/database/model"
 	"github.com/sirupsen/logrus"
 	"math"
 	"time"
@@ -134,6 +135,38 @@ func (i *Indexer) UpdateAlias(newIndex string) error {
 	return nil
 }
 
+// GetLatestIndexName 获取最新的索引名称
+func (i *Indexer) GetLatestIndexName() (string, error) {
+	elastic := i.SvcCtx.Elastic
+
+	// 获取别名 rm-search 关联的所有索引
+	aliasResp, err := elastic.Indices.GetAlias(elastic.Indices.GetAlias.WithName(common.IndexEntityName))
+	if err != nil {
+		return "", errors.Wrap(err, "get alias failed")
+	}
+	defer aliasResp.Body.Close()
+
+	if aliasResp.StatusCode != 200 {
+		return "", errors.Errorf("get alias failed, status code: %d", aliasResp.StatusCode)
+	}
+
+	var aliasIndices map[string]interface{}
+	if err := json.NewDecoder(aliasResp.Body).Decode(&aliasIndices); err != nil {
+		return "", errors.Wrap(err, "decode alias response failed")
+	}
+	if len(aliasIndices) == 0 {
+		return "", errors.New("no indices found for alias")
+	}
+	// 获取最新的索引名称
+	var latestIndex string
+	for indexName := range aliasIndices {
+		if latestIndex == "" || indexName > latestIndex {
+			latestIndex = indexName
+		}
+	}
+	return latestIndex, nil
+}
+
 // DeleteUnusedIndices 删除未使用的索引
 func (i *Indexer) DeleteUnusedIndices() error {
 	elastic := i.SvcCtx.Elastic
@@ -233,16 +266,11 @@ func (i *Indexer) ScrollAndIndexBbsPost(ctx context.Context, index string, start
 		}
 
 		for _, post := range posts {
-			id := GetEntityId(EntityTypeBbsPost, post.ID)
-			doc, err := ConvertBbsPost(id, []byte(post.Data))
+			err = i.IndexBbsPost(index, post)
 			if err != nil {
 				if !errors.Is(err, ErrBbsPostCannotIndex) {
-					logrus.Errorf("convert post failed, id: %d, err: %v", post.ID, err)
+					logrus.Errorf("index post failed, id: %d, err: %v", post.ID, err)
 				}
-				continue
-			}
-			if err = i.IndexDoc(index, id, doc); err != nil {
-				logrus.Errorf("index post failed, id: %d, err: %v", post.ID, err)
 				continue
 			}
 			successCount++
@@ -251,6 +279,51 @@ func (i *Indexer) ScrollAndIndexBbsPost(ctx context.Context, index string, start
 		offset = posts[len(posts)-1].ID + 1
 		logrus.Infof("index %d posts, next offset: %d", len(posts), offset)
 	}
+
+	return successCount, nil
+}
+
+// IndexBbsPost 索引单个帖子
+func (i *Indexer) IndexBbsPost(index string, item *model.BbsPost) error {
+	id := GetEntityId(EntityTypeBbsPost, item.ID)
+	doc, err := ConvertBbsPost(id, []byte(item.Data))
+	if err != nil {
+		return err
+	}
+	if err = i.IndexDoc(index, id, doc); err != nil {
+		return err
+	}
+	return nil
+}
+
+// IndexLatestBbsPost 索引最新的帖子
+func (i *Indexer) IndexLatestBbsPost(ctx context.Context, index string, category string) (int64, error) {
+	b := i.SvcCtx.Query.BbsPost
+	ids, err := i.PersistenceLatest(ctx, category)
+	if err != nil {
+		return 0, errors.Wrapf(err, "persistence latest posts failed")
+	}
+	if len(ids) == 0 {
+		return 0, nil
+	}
+
+	posts, err := b.WithContext(ctx).Where(b.ID.In(ids...)).Find()
+	if err != nil {
+		return 0, err
+	}
+	var successCount int64
+	for _, post := range posts {
+		if post == nil {
+			continue
+		}
+		err = i.IndexBbsPost(index, post)
+		if err != nil {
+			logrus.Errorf("index latest bbs post failed, id: %d, err: %v", post.ID, err)
+			continue
+		}
+		successCount++
+	}
+	logrus.Infof("index latest bbs posts success for category %s, count: %d", category, successCount)
 
 	return successCount, nil
 }

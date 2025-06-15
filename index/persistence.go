@@ -153,7 +153,7 @@ func (i *Indexer) BatchPersistenceIds(ctx context.Context, ids []int64, goroutin
 }
 
 // PersistenceLatest 持久化最新帖子
-func (i *Indexer) PersistenceLatest(ctx context.Context, category string) error {
+func (i *Indexer) PersistenceLatest(ctx context.Context, category string) ([]int64, error) {
 	b := i.SvcCtx.Query.BbsPost
 
 	resp, err := GetBbsPostList(&BbsPostListReq{
@@ -164,10 +164,10 @@ func (i *Indexer) PersistenceLatest(ctx context.Context, category string) error 
 		},
 	})
 	if err != nil {
-		return errors.Wrapf(err, "get latest posts for category %s failed", category)
+		return nil, errors.Wrapf(err, "get latest posts for category %s failed", category)
 	}
 	if resp.Code != 0 {
-		return errors.Errorf("get latest posts for category %s failed, code: %d", category, resp.Code)
+		return nil, errors.Errorf("get latest posts for category %s failed, code: %d", category, resp.Code)
 	}
 
 	var ids []int64
@@ -176,13 +176,13 @@ func (i *Indexer) PersistenceLatest(ctx context.Context, category string) error 
 	}
 	if len(ids) == 0 {
 		logrus.Infof("no latest posts found for category %s", category)
-		return nil
+		return nil, nil
 	}
 
 	// 查询已经持久化的帖子
 	foundPosts, err := b.WithContext(ctx).Where(b.ID.In(ids...)).Find()
 	if err != nil {
-		return errors.Wrapf(err, "find posts for category %s failed", category)
+		return nil, errors.Wrapf(err, "find posts for category %s failed", category)
 	}
 	foundPostMap := lo.SliceToMap(foundPosts, func(item *model.BbsPost) (int64, *model.BbsPost) {
 		return item.ID, item
@@ -216,10 +216,10 @@ func (i *Indexer) PersistenceLatest(ctx context.Context, category string) error 
 	logrus.Infof("checked %d posts for category %s, need to update: %d (unchecked: %d, newly founded: %d, outdated: %d)",
 		len(ids), category, len(needUpdateIds), uncheckedCount, newlyFoundedCount, outdatedCount)
 	if len(needUpdateIds) == 0 {
-		return nil
+		return nil, nil
 	}
 
-	return i.BatchPersistenceIds(ctx, needUpdateIds, 5)
+	return needUpdateIds, i.BatchPersistenceIds(ctx, needUpdateIds, 5)
 }
 
 // Persistence 持久化帖子

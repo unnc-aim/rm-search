@@ -15,16 +15,25 @@ type IncrementalJob struct {
 func (j IncrementalJob) Run() {
 	ctx := context.Background()
 
-	err := j.Indexer.PersistenceLatest(ctx, "ARTICLE")
+	indexName, err := j.Indexer.GetLatestIndexName()
 	if err != nil {
-		logrus.Fatalf("PersistenceLatest article error: %v", err)
+		logrus.Errorf("GetLatestIndexName error: %v", err)
+		return
 	}
-	err = j.Indexer.PersistenceLatest(ctx, "FAQ")
+
+	_, err = j.Indexer.IndexLatestBbsPost(ctx, indexName, "ARTICLE")
 	if err != nil {
-		logrus.Fatalf("PersistenceLatest faq error: %v", err)
+		logrus.Errorf("PersistenceLatest article error: %v", err)
+		return
 	}
-	err = j.Indexer.PersistenceLatest(ctx, "WIKI")
+	_, err = j.Indexer.IndexLatestBbsPost(ctx, indexName, "FAQ")
 	if err != nil {
-		logrus.Fatalf("PersistenceLatest wiki error: %v", err)
+		logrus.Errorf("PersistenceLatest faq error: %v", err)
+		return
+	}
+	_, err = j.Indexer.IndexLatestBbsPost(ctx, indexName, "WIKI")
+	if err != nil {
+		logrus.Errorf("PersistenceLatest wiki error: %v", err)
+		return
 	}
 }

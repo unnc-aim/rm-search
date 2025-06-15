@@ -98,3 +98,14 @@ func TestIndexer_ScrollAndIndexAttachment(t *testing.T) {
 	}
 	t.Logf("put alias %s", index)
 }
+
+func TestIndexer_GetLatestIndex(t *testing.T) {
+	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithElastic())
+	idx := NewIndexer(svcCtx)
+
+	latestIndex, err := idx.GetLatestIndexName()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("latest index: %s", latestIndex)
+}
