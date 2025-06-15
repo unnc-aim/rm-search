@@ -23,6 +23,7 @@ import (
 var (
 	Mutex         = sync.Mutex{}
 	PostCount     = atomic.Int64{}
+	TotalCount    = atomic.Int64{}
 	LastPrintTime = time.Now()
 )
 
@@ -159,9 +160,10 @@ func (i *Indexer) Persistence(ctx context.Context, id int64) error {
 	}
 
 	PostCount.Add(1)
+	TotalCount.Add(1)
 	if Mutex.TryLock() {
 		if time.Since(LastPrintTime) > time.Second {
-			logrus.Infof("QPS: %d", PostCount.Load())
+			logrus.Infof("QPS: %d, Total: %d", PostCount.Load(), TotalCount.Load())
 			LastPrintTime = time.Now()
 			PostCount.Store(0)
 		}
