@@ -1,26 +1,21 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/scutrobotlab/rm-search/common"
 	"github.com/scutrobotlab/rm-search/svc"
 	"github.com/sirupsen/logrus"
 )
 
-type WordCloudItem struct {
-	Word  string `json:"word" gorm:"column:query"`
-	Count int64  `json:"count"`
-}
-
 func WordCloud(c *gin.Context) {
-	db := svc.Ctx().Db
-	query := fmt.Sprintf("SELECT `query`, COUNT(*) AS `count` FROM `search_log` GROUP BY `query` ORDER BY `count` DESC LIMIT 100")
-
-	var rows []WordCloudItem
-	if err := db.Raw(query).Scan(&rows).Error; err != nil {
-		logrus.Errorf("query search log error: %v", err)
+	var rows []common.WordCloudItem
+	if value, ok := svc.Ctx().Cache.Get(common.CacheWordCloud); ok {
+		rows = value.([]common.WordCloudItem)
+	} else {
+		logrus.Error("Cache miss for word cloud data")
 		c.JSON(500, gin.H{
-			"error": "Internal Server Error",
+			"error": "Internal server error",
+			"msg":   "Word cloud data not available",
 		})
 		return
 	}

@@ -35,6 +35,12 @@ func (b Base) Start() {
 			Job:          IncrementalJob{Base: b, Indexer: indexer},
 			OnceWhenInit: true,
 		},
+		{
+			Name:         "Load Word Cloud",
+			Spec:         "@every 5m",
+			Job:          WordCloudJob{Base: b},
+			OnceWhenInit: true,
+		},
 	}
 
 	for _, item := range jobs {
