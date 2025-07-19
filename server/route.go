@@ -14,7 +14,12 @@ func Run() {
 	r.POST("/_msearch", handler.MSearch)
 	r.GET("/static/*path", handler.Static)
 
-	g := r.Group("/admin", middleware.AdminAuthMiddleware())
+	g := r.Group("/statistics")
+	{
+		g.GET("/word-cloud", handler.WordCloud)
+	}
+
+	g = r.Group("/admin", middleware.AdminAuthMiddleware())
 	{
 		g.GET("/ping", admin.Ping)
 		g.POST("/recreate-index", admin.RecreateIndex)
