@@ -2,11 +2,14 @@ package index
 
 import (
 	"fmt"
+	"github.com/scutrobotlab/rm-search/svc"
 	"testing"
 )
 
 func TestGetBbsPost(t *testing.T) {
-	post, err := GetBbsPost(54068)
+	svcCtx := svc.NewContextForTest(svc.WithConfig())
+	idx := NewIndexer(svcCtx)
+	post, err := idx.GetBbsPost(54068)
 	if err != nil {
 		t.Fatalf("GetBbsPost error: %v", err)
 	}
@@ -16,8 +19,11 @@ func TestGetBbsPost(t *testing.T) {
 func TestGetBbsPost2(t *testing.T) {
 	const startId = 54050
 	const endId = 54100
+
+	svcCtx := svc.NewContextForTest()
+	idx := NewIndexer(svcCtx)
 	for i := startId; i < endId; i++ {
-		post, err := GetBbsPost(int64(i))
+		post, err := idx.GetBbsPost(int64(i))
 		if err != nil {
 			t.Fatalf("GetBbsPost error: %v", err)
 		}
@@ -29,6 +35,9 @@ func TestGetBbsPost2(t *testing.T) {
 }
 
 func TestGetBbsPostList(t *testing.T) {
+	svcCtx := svc.NewContextForTest(svc.WithConfig())
+	idx := NewIndexer(svcCtx)
+
 	categories := []string{
 		"ARTICLE",
 		"FAQ",
@@ -36,7 +45,7 @@ func TestGetBbsPostList(t *testing.T) {
 	}
 	for _, category := range categories {
 		fmt.Printf("Testing category: %s\n", category)
-		resp, err := GetBbsPostList(&BbsPostListReq{
+		resp, err := idx.GetBbsPostList(&BbsPostListReq{
 			PageSize: 10,
 			PageNo:   0,
 			Filter: BbsPostListReqFilter{

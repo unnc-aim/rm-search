@@ -156,7 +156,7 @@ func (i *Indexer) BatchPersistenceIds(ctx context.Context, ids []int64, goroutin
 func (i *Indexer) PersistenceLatest(ctx context.Context, category string) ([]int64, error) {
 	b := i.SvcCtx.Query.BbsPost
 
-	resp, err := GetBbsPostList(&BbsPostListReq{
+	resp, err := i.GetBbsPostList(&BbsPostListReq{
 		PageSize: 100,
 		PageNo:   1,
 		Filter: BbsPostListReqFilter{
@@ -167,7 +167,11 @@ func (i *Indexer) PersistenceLatest(ctx context.Context, category string) ([]int
 		return nil, errors.Wrapf(err, "get latest posts for category %s failed", category)
 	}
 	if resp.Code != 0 {
-		return nil, errors.Errorf("get latest posts for category %s failed, code: %d", category, resp.Code)
+		switch resp.Code {
+		case 80008998:
+			logrus.Errorf("RoboMaster 论坛已强制要求登录，请在配置文件中添加 DJIMetaKey.")
+		}
+		return nil, errors.Errorf("get latest posts for category %s failed, code: %d, message: %s", category, resp.Code, resp.Message)
 	}
 
 	var ids []int64
@@ -225,7 +229,7 @@ func (i *Indexer) PersistenceLatest(ctx context.Context, category string) ([]int
 // Persistence 持久化帖子
 func (i *Indexer) Persistence(ctx context.Context, id int64) error {
 	p := i.SvcCtx.Query.BbsPost
-	postResp, err := GetBbsPost(id)
+	postResp, err := i.GetBbsPost(id)
 	if err != nil {
 		return errors.Wrap(err, "get post info failed")
 	}

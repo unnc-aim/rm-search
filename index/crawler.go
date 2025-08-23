@@ -32,11 +32,19 @@ var (
 )
 
 // GetBbsPost 获取帖子信息
-func GetBbsPost(id int64) (ret *BbsPostResp, err error) {
-	url1 := fmt.Sprintf("https://bbs.robomaster.com/developers-server/rest/posts/info/%d", id)
-	resp, err := client.Post(url1, "", nil)
+func (i *Indexer) GetBbsPost(id int64) (ret *BbsPostResp, err error) {
+	reqUrl := fmt.Sprintf("https://bbs.robomaster.com/developers-server/rest/posts/info/%d", id)
+	req, err := http.NewRequest(http.MethodPost, reqUrl, nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "new request")
+	}
+	req.AddCookie(&http.Cookie{
+		Name:  "_meta_key",
+		Value: i.SvcCtx.Config.DJIMetaKey,
+	})
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, errors.Wrapf(err, "post request")
 	}
 	defer resp.Body.Close()
 
@@ -56,14 +64,23 @@ func GetBbsPost(id int64) (ret *BbsPostResp, err error) {
 }
 
 // GetBbsPostList 获取帖子列表
-func GetBbsPostList(req *BbsPostListReq) (ret *BbsPostListResp, err error) {
-	const url1 = "https://bbs.robomaster.com/developers-server/rest/posts/list"
-	body, err := json.Marshal(req)
+func (i *Indexer) GetBbsPostList(reqBody *BbsPostListReq) (ret *BbsPostListResp, err error) {
+	const ReqUrl = "https://bbs.robomaster.com/developers-server/rest/posts/list"
+	body, err := json.Marshal(reqBody)
 	if err != nil {
 		return nil, errors.Wrapf(err, "marshal request body")
 	}
 
-	resp, err := client.Post(url1, "application/json", bytes.NewReader(body))
+	req, err := http.NewRequest(http.MethodPost, ReqUrl, bytes.NewReader(body))
+	if err != nil {
+		return nil, errors.Wrapf(err, "new request")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(&http.Cookie{
+		Name:  "_meta_key",
+		Value: i.SvcCtx.Config.DJIMetaKey,
+	})
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, errors.Wrapf(err, "post request")
 	}
