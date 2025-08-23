@@ -99,6 +99,9 @@ cp etc/config.template.yaml etc/config.yaml
 vim etc/config.yaml
 ```
 
+RoboMaster 论坛需要登录后才能访问。你需要先登录论坛，再从控制台 Cookies 中获取 `_meta_key` 的值，填入配置文件的
+`DJIMetaKey` 字段。
+
 #### 获取数据
 
 你需要先从 RM 论坛和公告中获取数据，并保存在数据库中。
