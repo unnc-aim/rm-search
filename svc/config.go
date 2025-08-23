@@ -13,6 +13,7 @@ type Config struct {
 	AdminToken    string          `yaml:"AdminToken"`
 	SearchLog     SearchLogConfig `yaml:"SearchLog"`
 	Proxy         ProxyConfig     `yaml:"Proxy"`
+	DJIMetaKey    string          `yaml:"DJIMetaKey"`
 }
 
 type ElasticConfig struct {

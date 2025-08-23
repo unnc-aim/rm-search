@@ -53,3 +53,9 @@ func WithTika() Option {
 		c.Tika = client
 	}
 }
+
+func WithConfig() Option {
+	return func(c *Context) {
+		c.Config = ReadConfig("../etc/config.yaml")
+	}
+}

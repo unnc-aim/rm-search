@@ -14,3 +14,4 @@ SearchLog:
 Proxy:
   Enabled: false
   URL: "http://localhost:7890"
+DJIMetaKey: "DJI_META_KEY"
