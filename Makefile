@@ -1,4 +1,7 @@
 build:
+	go build -o rm-search
+
+image:
 	docker build -t registry.cn-guangzhou.aliyuncs.com/scutrobot/rm-search:latest --platform linux/amd64 .
 
 push:
