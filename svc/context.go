@@ -1,14 +1,17 @@
 package svc
 
 import (
+	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/google/go-tika/tika"
 	"github.com/patrickmn/go-cache"
 	"github.com/scutrobotlab/rm-search/database/query"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"net/http"
-	"time"
 )
 
 var global *Context
@@ -27,7 +30,16 @@ func Ctx() *Context {
 }
 
 func InitContext(c Config) {
-	db, err := gorm.Open(mysql.Open(c.DataSource), &gorm.Config{})
+	var db *gorm.DB
+	var err error
+	switch c.Driver {
+	case "mysql":
+		db, err = gorm.Open(mysql.Open(c.DataSource), &gorm.Config{})
+	case "postgres":
+		db, err = gorm.Open(postgres.Open(c.DataSource), &gorm.Config{})
+	default:
+		panic(fmt.Sprintf("unsupported driver: %s", c.Driver))
+	}
 	if err != nil {
 		panic(err)
 	}

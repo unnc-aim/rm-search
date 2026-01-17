@@ -6,13 +6,15 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"io"
+	"math"
+	"time"
+
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/pkg/errors"
 	"github.com/scutrobotlab/rm-search/common"
 	"github.com/scutrobotlab/rm-search/database/model"
 	"github.com/sirupsen/logrus"
-	"math"
-	"time"
 )
 
 //go:embed mapping/rm-search.json
@@ -75,8 +77,9 @@ func (i *Indexer) CreateIndex() (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
 	if resp.StatusCode != 200 {
-		return "", errors.Errorf("create index failed, status code: %d", resp.StatusCode)
+		return "", errors.Errorf("create index failed, status code: %d, %s", resp.StatusCode, string(body))
 	}
 
 	return index, nil
@@ -128,8 +131,12 @@ func (i *Indexer) UpdateAlias(newIndex string) error {
 		return err
 	}
 	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 	if resp.StatusCode != 200 {
-		return errors.Errorf("update aliases failed, status code: %d", resp.StatusCode)
+		return errors.Errorf("update aliases failed, status code: %d, %s", resp.StatusCode, string(body))
 	}
 
 	return nil
