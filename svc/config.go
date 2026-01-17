@@ -1,26 +1,23 @@
 package svc
 
 import (
-	"gopkg.in/yaml.v3"
-	"io"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	DataSource    string          `yaml:"DataSource"`
-	ElasticConfig ElasticConfig   `yaml:"ElasticConfig"`
-	TikaHost      string          `yaml:"TikaHost"`
-	AdminToken    string          `yaml:"AdminToken"`
-	SearchLog     SearchLogConfig `yaml:"SearchLog"`
-	Proxy         ProxyConfig     `yaml:"Proxy"`
-	DJIMetaKey    string          `yaml:"DJIMetaKey"`
+	DataSource  string            `yaml:"DataSource"`
+	MeiliSearch MeiliSearchConfig `yaml:"MeiliSearch"`
+	TikaHost    string            `yaml:"TikaHost"`
+	SearchLog   SearchLogConfig   `yaml:"SearchLog"`
+	Proxy       ProxyConfig       `yaml:"Proxy"`
+	DJIMetaKey  string            `yaml:"DJIMetaKey"`
 }
 
-type ElasticConfig struct {
-	Addresses []string `yaml:"Addresses"`
-	APIKey    string   `yaml:"APIKey"`
-	Username  string   `yaml:"Username"`
-	Password  string   `yaml:"Password"`
+type MeiliSearchConfig struct {
+	Address string `yaml:"Address"`
+	APIKey  string `yaml:"APIKey"`
 }
 
 type SearchLogConfig struct {
@@ -39,12 +36,9 @@ func ReadConfig(path string) Config {
 	if err != nil {
 		panic(err)
 	}
-	confBytes, err := io.ReadAll(conf)
-	if err != nil {
-		panic(err)
-	}
+	defer conf.Close()
 	var c Config
-	err = yaml.Unmarshal(confBytes, &c)
+	err = yaml.NewDecoder(conf).Decode(&c)
 	if err != nil {
 		panic(err)
 	}

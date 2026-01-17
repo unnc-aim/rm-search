@@ -1,9 +1,5 @@
 package index
 
-import (
-	"fmt"
-)
-
 type EntityType string
 
 const (
@@ -42,8 +38,4 @@ type BaseEntity struct {
 
 type Entity struct {
 	BaseEntity
-}
-
-func GetEntityId(entityType EntityType, id any) string {
-	return fmt.Sprintf("%s:%v", entityType, id)
 }
