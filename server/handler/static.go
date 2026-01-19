@@ -1,12 +1,17 @@
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/scutrobotlab/rm-search/common"
+	"embed"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/scutrobotlab/rm-search/common"
 )
+
+//go:embed frontend/*
+var Frontend embed.FS
 
 func Static(c *gin.Context) {
 	path := c.Param("path")

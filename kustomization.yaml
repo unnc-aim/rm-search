@@ -1,0 +1,129 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rm-search-config
+  namespace: default
+data:
+  config.yaml: |
+    DataSource: "<USER>:<PASSWORD>@(mysql:3306)/rm_search?charset=utf8mb4&parseTime=True&loc=Local"
+    MeiliSearch:
+      Address: "http://meilisearch:7700"
+      APIKey: "<MEILISEARCH_API_KEY>"
+    TikaHost: "http://localhost:9998"
+    AdminToken: ""
+    SearchLog:
+      Enabled: true
+      DisabledRequestBody: false
+      DisabledResponseBody: false
+    DJIMetaKey: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rm-search-stack
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rm-search
+  template:
+    metadata:
+      labels:
+        app: rm-search
+    spec:
+      containers:
+        - name: rm-search
+          image: ghcr.io/scutrobot/rm-search:latest
+          volumeMounts:
+            - name: config-volume
+              mountPath: /root/etc/config.yaml
+              subPath: config.yaml
+          ports:
+            - containerPort: 8080
+        - name: tika
+          image: apache/tika:3.1.0.0
+          ports:
+            - containerPort: 9998
+        - name: rm-search-ui
+          image: ghcr.io/scutrobot/rm-search-heroui:latest
+          ports:
+            - containerPort: 80
+
+      volumes:
+        - name: config-volume
+          configMap:
+            name: rm-search-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rm-search-backend-svc
+spec:
+  selector:
+    app: rm-search
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rm-search-ui-svc
+spec:
+  selector:
+    app: rm-search
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: rm-search-stripprefix
+  namespace: default
+spec:
+  stripPrefix:
+    prefixes:
+      - /api
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rm-search-api-ingress
+  namespace: default
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: default-rm-search-stripprefix@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: search.scutbot.cn
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: rm-search-backend-svc
+                port:
+                  number: 8080
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rm-search-ui-ingress
+  namespace: default
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: search.scutbot.cn
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rm-search-ui-svc
+                port:
+                  number: 80
