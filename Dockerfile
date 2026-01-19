@@ -1,17 +1,5 @@
 ARG GO_BUILD_ARGS="-trimpath -ldflags -s -w"
 
-FROM node:20-slim AS frontend-builder
-
-WORKDIR /app
-RUN npm install -g pnpm
-
-COPY ./frontend/package.json ./frontend/pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
-
-COPY ./frontend .
-
-RUN pnpm build
-
 FROM golang:1.23-alpine as builder
 
 WORKDIR /app
@@ -26,7 +14,6 @@ COPY . .
 RUN go build ${GO_BUILD_ARGS} -o bin/recreate-index ./cmd/recreate-index
 RUN go build ${GO_BUILD_ARGS} -o bin/incremental-index ./cmd/incremental-index
 
-COPY --from=frontend-builder /app/dist ./server/handler/frontend
 RUN go build ${GO_BUILD_ARGS} -o bin/rm-search .
 
 FROM alpine:3.20

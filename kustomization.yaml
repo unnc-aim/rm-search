@@ -45,6 +45,10 @@ spec:
           image: apache/tika:3.1.0.0
           ports:
             - containerPort: 9998
+        - name: rm-search-ui
+          image: ghcr.io/scutrobot/rm-search-heroui:latest
+          ports:
+            - containerPort: 80
 
       volumes:
         - name: config-volume
@@ -54,21 +58,62 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: rm-search-service
+  name: rm-search-backend-svc
+spec:
+  selector:
+    app: rm-search
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rm-search-ui-svc
 spec:
   selector:
     app: rm-search
   ports:
     - port: 80
-      targetPort: 8080
+      targetPort: 80
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: rm-search-stripprefix
+  namespace: default
+spec:
+  stripPrefix:
+    prefixes:
+      - /api
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: rm-search-ingress
+  name: rm-search-api-ingress
   namespace: default
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: default-rm-search-stripprefix@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: search.scutbot.cn
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: rm-search-backend-svc
+                port:
+                  number: 8080
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rm-search-ui-ingress
+  namespace: default
 spec:
   ingressClassName: traefik
   rules:
@@ -79,6 +124,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: rm-search-service
+                name: rm-search-ui-svc
                 port:
                   number: 80
