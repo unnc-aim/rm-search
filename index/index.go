@@ -52,14 +52,15 @@ func (i *Indexer) UpdateIndexSettings(ctx context.Context) error {
 		FilterableAttributes: []string{"source", "college_name", "category_lvl0", "category_lvl1", "create_time"},
 		SortableAttributes:   []string{"create_time"},
 		RankingRules: []string{
-			"exactness",
+			"words",
+			"typo",
 			"sort",
 			"attribute",
 			"create_time:desc",
-			"words",
 			"proximity",
-			"typo",
+			"exactness",
 		},
+		StopWords: []string{"的", "和", "如何", "实现", "开源"},
 	})
 	if err != nil {
 		return err
