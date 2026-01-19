@@ -49,7 +49,7 @@ func (i *Indexer) UpdateIndexSettings(ctx context.Context) error {
 	_, err := i.SvcCtx.Index.UpdateSettingsWithContext(ctx, &meilisearch.Settings{
 		DisplayedAttributes:  []string{"*"},
 		SearchableAttributes: []string{"title", "content"},
-		FilterableAttributes: []string{"source", "college_name", "categories_lvl0", "categories_lvl1", "create_time"},
+		FilterableAttributes: []string{"source", "college_name", "category_lvl0", "category_lvl1", "create_time"},
 		SortableAttributes:   []string{"create_time"},
 		RankingRules: []string{
 			"exactness",
