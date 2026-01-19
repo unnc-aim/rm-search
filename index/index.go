@@ -47,18 +47,19 @@ func (i *Indexer) RecreateIndex(ctx context.Context) error {
 
 func (i *Indexer) UpdateIndexSettings(ctx context.Context) error {
 	_, err := i.SvcCtx.Index.UpdateSettingsWithContext(ctx, &meilisearch.Settings{
-		DisplayedAttributes: []string{"id",
-			"source",
-			"title",
-			"content",
-			"image",
-			"url",
-			"author_nickname",
-			"author_avatar",
-			"create_time"},
+		DisplayedAttributes:  []string{"*"},
 		SearchableAttributes: []string{"title", "content"},
-		FilterableAttributes: []string{"source", "college_name", "categories.lvl0"},
+		FilterableAttributes: []string{"source", "college_name", "categories_lvl0", "categories_lvl1", "create_time"},
 		SortableAttributes:   []string{"create_time"},
+		RankingRules: []string{
+			"exactness",
+			"sort",
+			"attribute",
+			"create_time:desc",
+			"words",
+			"proximity",
+			"typo",
+		},
 	})
 	if err != nil {
 		return err
