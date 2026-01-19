@@ -2,13 +2,14 @@ package index
 
 import (
 	"context"
-	"github.com/scutrobotlab/rm-search/svc"
 	"testing"
+
+	"github.com/scutrobotlab/rm-search/svc"
 )
 
 func TestIndexer_RecreateIndex(t *testing.T) {
 	ctx := context.Background()
-	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithElastic())
+	svcCtx := svc.NewContextForTest(svc.WithElastic())
 	idx := NewIndexer(svcCtx)
 
 	err := idx.RecreateIndex(ctx)
@@ -108,4 +109,14 @@ func TestIndexer_GetLatestIndex(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Logf("latest index: %s", latestIndex)
+}
+
+func TestIndexer_UpdateAlias(t *testing.T) {
+	svcCtx := svc.NewContextForTest(svc.WithElastic())
+	idx := NewIndexer(svcCtx)
+	if err := idx.UpdateAlias("rm-search-20260116-033652"); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("alias updated")
 }

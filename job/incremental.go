@@ -2,6 +2,7 @@ package job
 
 import (
 	"context"
+
 	"github.com/scutrobotlab/rm-search/index"
 	"github.com/sirupsen/logrus"
 )
@@ -15,23 +16,17 @@ type IncrementalJob struct {
 func (j IncrementalJob) Run() {
 	ctx := context.Background()
 
-	indexName, err := j.Indexer.GetLatestIndexName()
-	if err != nil {
-		logrus.Errorf("GetLatestIndexName error: %v", err)
-		return
-	}
-
-	_, err = j.Indexer.IndexLatestBbsPost(ctx, indexName, "ARTICLE")
+	_, err := j.Indexer.IndexLatestBbsPost(ctx, "ARTICLE")
 	if err != nil {
 		logrus.Errorf("PersistenceLatest article error: %v", err)
 		return
 	}
-	_, err = j.Indexer.IndexLatestBbsPost(ctx, indexName, "FAQ")
+	_, err = j.Indexer.IndexLatestBbsPost(ctx, "FAQ")
 	if err != nil {
 		logrus.Errorf("PersistenceLatest faq error: %v", err)
 		return
 	}
-	_, err = j.Indexer.IndexLatestBbsPost(ctx, indexName, "WIKI")
+	_, err = j.Indexer.IndexLatestBbsPost(ctx, "WIKI")
 	if err != nil {
 		logrus.Errorf("PersistenceLatest wiki error: %v", err)
 		return

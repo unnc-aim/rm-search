@@ -1,12 +1,13 @@
 package svc
 
 import (
-	"github.com/elastic/go-elasticsearch/v8"
+	"net/http"
+
 	"github.com/google/go-tika/tika"
+	"github.com/meilisearch/meilisearch-go"
 	"github.com/scutrobotlab/rm-search/database/query"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type Option func(c *Context)
@@ -31,18 +32,12 @@ func WithDb() Option {
 	}
 }
 
-func WithElastic() Option {
+func WithMeili() Option {
 	return func(c *Context) {
-		var Addresses = []string{"http://localhost:9200"}
-		elastic, err := elasticsearch.NewClient(elasticsearch.Config{
-			Addresses: Addresses,
-			Username:  "elastic",
-			Password:  "elastic",
-		})
-		if err != nil {
-			panic(err)
-		}
-		c.Elastic = elastic
+		const MeiliSearchAddress = "http://localhost:7700"
+		const MeiliSearchAPIKey = "123456"
+		client := meilisearch.New(MeiliSearchAddress, meilisearch.WithAPIKey(MeiliSearchAPIKey))
+		c.Meili = client
 	}
 }
 

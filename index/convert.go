@@ -3,13 +3,14 @@ package index
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/pkg/errors"
 	"github.com/scutrobotlab/rm-search/common"
 	"github.com/scutrobotlab/rm-search/database/model"
 	"github.com/sirupsen/logrus"
-	"regexp"
-	"strings"
-	"time"
 )
 
 const (
@@ -19,10 +20,16 @@ const (
 
 var ErrBbsPostCannotIndex = errors.New("bbs post cannot be indexed")
 
+func getEntityId(entityType EntityType, id any) string {
+	return fmt.Sprintf("%s-%v", entityType, id)
+}
+
 // ConvertBbsPost 转换 BbsPost 信息
-func ConvertBbsPost(id string, src []byte) ([]byte, error) {
+func ConvertBbsPost(m *model.BbsPost) (*Entity, error) {
+	id := getEntityId(EntityTypeBbsPost, m.ID)
+
 	var post BbsPost
-	if err := json.Unmarshal(src, &post); err != nil {
+	if err := json.Unmarshal([]byte(m.Data), &post); err != nil {
 		return nil, err
 	}
 	title := strings.TrimSpace(post.Title)
@@ -125,7 +132,7 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 	createTime := time.Time(post.CreateAt).UnixMilli()
 	updateTime := time.Time(post.UpdateAt).UnixMilli()
 
-	return json.Marshal(Entity{
+	return &Entity{
 		BaseEntity: BaseEntity{
 			Id:             id,
 			Type:           EntityTypeBbsPost,
@@ -143,11 +150,13 @@ func ConvertBbsPost(id string, src []byte) ([]byte, error) {
 			CreateTime:     createTime,
 			UpdateTime:     updateTime,
 		},
-	})
+	}, nil
 }
 
 // ConvertAnnounce 转换公告信息
-func ConvertAnnounce(id string, src model.Announce) ([]byte, error) {
+func ConvertAnnounce(src *model.Announce) (*Entity, error) {
+	id := getEntityId(EntityTypeAnnounce, src.ID)
+
 	var attachments []Attachment
 	err := json.Unmarshal([]byte(src.Attachments), &attachments)
 	if err != nil {
@@ -167,7 +176,7 @@ func ConvertAnnounce(id string, src model.Announce) ([]byte, error) {
 	url := fmt.Sprintf("%s/%d", AnnounceBaseURL, announce.Id)
 	date := announce.Date.UnixMilli()
 
-	return json.Marshal(Entity{
+	return &Entity{
 		BaseEntity: BaseEntity{
 			Id:             id,
 			Type:           EntityTypeAnnounce,
@@ -185,11 +194,13 @@ func ConvertAnnounce(id string, src model.Announce) ([]byte, error) {
 			CreateTime:     date,
 			UpdateTime:     date,
 		},
-	})
+	}, nil
 }
 
 // ConvertAttachment 转换附件信息
-func ConvertAttachment(id string, src model.Attachment) ([]byte, error) {
+func ConvertAttachment(src *model.Attachment) (*Entity, error) {
+	id := getEntityId(EntityTypeAttachment, src.ID)
+
 	var source string
 	switch src.Type {
 	case common.ContentTypePDF:
@@ -198,7 +209,7 @@ func ConvertAttachment(id string, src model.Attachment) ([]byte, error) {
 		logrus.Errorf("unknown attachment type: %s", src.Type)
 	}
 
-	return json.Marshal(Entity{BaseEntity: BaseEntity{
+	return &Entity{BaseEntity: BaseEntity{
 		Id:             id,
 		Type:           EntityTypeAttachment,
 		Source:         source,
@@ -214,5 +225,5 @@ func ConvertAttachment(id string, src model.Attachment) ([]byte, error) {
 		AuthorAvatar:   "/robomaster-10th.webp",
 		CreateTime:     src.LastModified,
 		UpdateTime:     src.LastModified,
-	}})
+	}}, nil
 }
