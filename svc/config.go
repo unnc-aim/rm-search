@@ -1,12 +1,14 @@
 package svc
 
 import (
-	"gopkg.in/yaml.v3"
 	"io"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
+	Driver        string          `yaml:"Driver"`
 	DataSource    string          `yaml:"DataSource"`
 	ElasticConfig ElasticConfig   `yaml:"ElasticConfig"`
 	TikaHost      string          `yaml:"TikaHost"`
