@@ -13,6 +13,7 @@ RUN go mod download
 COPY . .
 RUN go build ${GO_BUILD_ARGS} -o bin/recreate-index ./cmd/recreate-index
 RUN go build ${GO_BUILD_ARGS} -o bin/incremental-index ./cmd/incremental-index
+RUN go build ${GO_BUILD_ARGS} -o bin/setup-index ./cmd/setup-index
 
 RUN go build ${GO_BUILD_ARGS} -o bin/rm-search .
 
