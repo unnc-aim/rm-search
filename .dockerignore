@@ -1,0 +1,16 @@
+# Keep the build context to files that affect the compiled artifacts, so
+# unrelated changes (docs, deploy configs, IDE files) neither bloat the
+# context nor invalidate the COPY layer cache.
+.git
+.github
+.idea
+.vscode
+docs
+deploy
+etc
+unittest
+recover
+README.md
+LICENSE
+Dockerfile
+Makefile

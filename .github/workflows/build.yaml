@@ -4,6 +4,15 @@ on:
   push:
     branches:
       - 'main'
+    # Only rebuild when files that affect the compiled artifacts change;
+    # docs, deploy config and other non-build files skip the job.
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Dockerfile'
+      - '.dockerignore'
+      - '.github/workflows/build.yaml'
 
 permissions:
   contents: read

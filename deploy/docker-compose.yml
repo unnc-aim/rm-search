@@ -30,10 +30,10 @@ services:
       - ./data/meili:/meili_data
 
   rm-search:
-    build:
-      context: ..
-      dockerfile: Dockerfile
-    image: rm-search:private
+    # build:
+    #   context: ..
+    #   dockerfile: Dockerfile
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/${GITHUB_REPOSITORY_NAME}:latest
     restart: unless-stopped
     depends_on:
       mysql:
