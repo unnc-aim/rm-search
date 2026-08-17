@@ -3,7 +3,7 @@ name: Auto Docker build
 on:
   push:
     branches:
-      - '*'
+      - 'main'
 
 permissions:
   contents: read
