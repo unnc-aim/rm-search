@@ -31,4 +31,9 @@ func (j IncrementalJob) Run() {
 		logrus.Errorf("PersistenceLatest wiki error: %v", err)
 		return
 	}
+	_, err = j.Indexer.IndexLatestAnnounce(ctx)
+	if err != nil {
+		logrus.Errorf("PersistenceLatest announce error: %v", err)
+		return
+	}
 }

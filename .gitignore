@@ -9,6 +9,13 @@
 *.so
 *.dylib
 
+# Extensionless binaries built by make build / go build without -o
+/rm-search
+/crawl
+/recreate-index
+/incremental-index
+/setup-index
+
 # Test binary, built with `go test -c`
 *.test
 

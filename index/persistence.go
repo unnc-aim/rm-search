@@ -328,14 +328,20 @@ func (i *Indexer) BatchPersistenceAnnounceIds(ctx context.Context, ids []int64, 
 
 // PersistenceAnnounce 持久化公告
 func (i *Indexer) PersistenceAnnounce(ctx context.Context, id int64) error {
-	a := i.SvcCtx.Query.Announce
-
 	announce, err := GetAnnounce(id)
 	if err != nil {
 		if !errors.Is(err, ErrStatusNotFound) {
 			return errors.Wrap(err, "get announce info failed")
 		}
 	}
+	return i.saveAnnounce(ctx, id, announce)
+}
+
+// saveAnnounce writes one announce row, found or not. Absent ids are kept
+// as Found = false markers so the incremental scan can advance its
+// high-water mark past them.
+func (i *Indexer) saveAnnounce(ctx context.Context, id int64, announce *Announce) error {
+	a := i.SvcCtx.Query.Announce
 
 	var announceDb model.Announce
 	if announce != nil {
@@ -363,12 +369,56 @@ func (i *Indexer) PersistenceAnnounce(ctx context.Context, id int64) error {
 			Attachments: "[]",
 		}
 	}
-	err = a.WithContext(ctx).Save(&announceDb)
+	err := a.WithContext(ctx).Save(&announceDb)
 	if err != nil {
 		return errors.Wrap(err, "save announce info failed")
 	}
 
 	return nil
+}
+
+// announceProbeMisses is how many consecutive absent announce ids an
+// incremental scan tolerates before it stops probing forward. Ids are not
+// strictly contiguous, so the threshold is deliberately generous.
+const announceProbeMisses = 20
+
+// PersistenceLatestAnnounce 持久化最新公告: 从当前最大公告 ID 向后逐个探测,
+// 连续 announceProbeMisses 个不存在即停止, 返回新发现的公告 ID 列表。
+func (i *Indexer) PersistenceLatestAnnounce(ctx context.Context) ([]int64, error) {
+	a := i.SvcCtx.Query.Announce
+
+	// High-water mark: largest probed id, whether or not it existed.
+	found, err := a.WithContext(ctx).Select(a.ID).Order(a.ID.Desc()).Limit(1).Find()
+	if err != nil {
+		return nil, errors.Wrap(err, "find max announce id failed")
+	}
+	var nextID int64 = 1
+	if len(found) > 0 && found[0].ID >= nextID {
+		nextID = found[0].ID + 1
+	}
+
+	var newIDs []int64
+	misses := 0
+	for misses < announceProbeMisses {
+		announce, err := GetAnnounce(nextID)
+		if err != nil && !errors.Is(err, ErrStatusNotFound) {
+			return newIDs, errors.Wrapf(err, "get announce %d failed", nextID)
+		}
+		if announce == nil {
+			misses++
+		} else {
+			misses = 0
+			newIDs = append(newIDs, nextID)
+		}
+		if err := i.saveAnnounce(ctx, nextID, announce); err != nil {
+			return newIDs, err
+		}
+		nextID++
+	}
+	if len(newIDs) > 0 {
+		logrus.Infof("announce incremental scan found %d new announces, next probe from %d", len(newIDs), nextID)
+	}
+	return newIDs, nil
 }
 
 // BatchPersistenceAttachmentFromAnnounce 批量持久化公告附件

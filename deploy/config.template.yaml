@@ -1,0 +1,15 @@
+DataSource: "root:SET_MYSQL_ROOT_PASSWORD@(mysql:3306)/rm_search?charset=utf8mb4&parseTime=True&loc=Local"
+MeiliSearch:
+  Address: "http://meilisearch:7700"
+  APIKey: "SET_MEILI_MASTER_KEY"
+TikaHost: ""
+SearchLog:
+  Enabled: true
+  DisabledRequestBody: false
+  DisabledResponseBody: false
+Proxy:
+  Enabled: false
+  URL: ""
+# The forum list and post APIs currently work without a login cookie;
+# fill this in only if the forum starts enforcing login again.
+DJIMetaKey: ""

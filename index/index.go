@@ -167,6 +167,31 @@ func (i *Indexer) IndexLatestBbsPost(ctx context.Context, category string) (int6
 	return int64(successCount), nil
 }
 
+// IndexLatestAnnounce 索引最新的公告
+func (i *Indexer) IndexLatestAnnounce(ctx context.Context) (int64, error) {
+	a := i.SvcCtx.Query.Announce
+	ids, err := i.PersistenceLatestAnnounce(ctx)
+	if err != nil {
+		return 0, errors.Wrapf(err, "persistence latest announces failed")
+	}
+	if len(ids) == 0 {
+		return 0, nil
+	}
+
+	announces, err := a.WithContext(ctx).Where(a.ID.In(ids...)).Find()
+	if err != nil {
+		return 0, err
+	}
+	successCount, err := indexDocs(i, ctx, announces, ConvertAnnounce)
+	if err != nil {
+		return int64(successCount), errors.Wrapf(err, "index docs failed")
+	}
+
+	logrus.Infof("index latest announces success, count: %d", successCount)
+
+	return int64(successCount), nil
+}
+
 // ScrollAndIndexAnnounce 滚动查询并索引公告
 func (i *Indexer) ScrollAndIndexAnnounce(ctx context.Context, startId, endId int64) (int64, error) {
 	const PageSize = 1000

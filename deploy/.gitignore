@@ -1,0 +1,5 @@
+# runtime state and secrets
+.env
+config.yaml
+data/
+crawl.log

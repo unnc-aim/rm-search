@@ -1,0 +1,58 @@
+# Self-hosted rm-search stack: MySQL + Meilisearch + rm-search + nginx.
+# See deploy/README.md for the bring-up steps.
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set in .env}
+      MYSQL_DATABASE: rm_search
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+      # Schema is applied on first boot only (empty data dir).
+      - ../database/rm_search.sql:/docker-entrypoint-initdb.d/rm_search.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?set in .env}
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - ./data/meili:/meili_data
+
+  rm-search:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: rm-search:private
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      meilisearch:
+        condition: service_started
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+    volumes:
+      # The binary reads etc/config.yaml relative to its workdir /root.
+      - ./config.yaml:/root/etc/config.yaml:ro
+      - /etc/localtime:/etc/localtime:ro
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - rm-search
+    ports:
+      - "${LISTEN_PORT:-8081}:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
