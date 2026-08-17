@@ -41,4 +41,6 @@ jobs:
         with:
           context: .
           push: true
+          provenance: false # Disable provenance to avoid unknown/unknown
+          sbom: false # Disable sbom to avoid unknown/unknown
           tags: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest,ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}
