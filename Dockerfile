@@ -20,7 +20,16 @@ RUN go build ${GO_BUILD_ARGS} -o bin/rm-search .
 
 FROM alpine:3.20
 
+# tzdata lets the binary resolve TZ names like Asia/Shanghai; without it
+# the Go runtime silently falls back to UTC even when /etc/localtime is
+# mounted. ca-certificates-bundle is already in the alpine base image.
+RUN apk add --no-cache tzdata
+
 WORKDIR /root/
+
+# Timezone via mounted host files (see deploy/docker-compose.yml); TZ env
+# overrides when set.
+ENV TZ=Asia/Shanghai
 
 COPY --from=builder /app/bin/recreate-index /usr/local/bin/recreate-index
 COPY --from=builder /app/bin/incremental-index /usr/local/bin/incremental-index
