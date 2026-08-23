@@ -38,12 +38,13 @@ func MSProxy(c *gin.Context) {
 	for k, v := range resp.Header {
 		c.Writer.Header()[k] = v
 	}
+	// The status must be written before the body; writing it afterwards
+	// is a no-op and used to mask upstream errors as 200.
+	c.Writer.WriteHeader(resp.StatusCode)
 	if _, err := io.Copy(c.Writer, resp.Body); err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.Writer.WriteHeader(resp.StatusCode)
 
 	c.Abort()
 }
