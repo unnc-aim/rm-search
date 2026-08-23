@@ -30,10 +30,9 @@ docker compose up -d --build
 docker compose run --rm rm-search /usr/local/bin/setup-index
 
 # 4. (可选) 加速全量回填
-#    rm-search 内置定时爬取任务 (每天 0/6/12/18 点): 每次先把最新帖子倒序
-#    爬到追新水位, 再从回填水位向更早的帖子推进 (每轮约 10 万个 ID,
-#    RM_SEARCH_CRAWL_CHUNK 可调), 触底后自动停止历史回填、只保留追新。
-#    全自动回填约需 2~5 天; 等不及可用 crawl 手动加速 (与水位线兼容):
+#    rm-search 启动后自动持续回填历史帖子 (后台循环, 每块约 10 万个 ID,
+#    RM_SEARCH_CRAWL_CHUNK 可调), 触底后标记完成并永久停止;
+#    每天 0/6/12/18 点另有追新任务补齐最新帖子。等不及可用 crawl 手动加速:
 docker compose run --rm rm-search /usr/local/bin/crawl \
     --announce-start 1 --announce-end 3000
 nohup docker compose run --rm rm-search /usr/local/bin/crawl \
@@ -66,7 +65,7 @@ docker compose logs -f rm-search | grep -i latest
 
 aim-feishu-rm-assistant 的 `.env` 中:
 
-```
+```env
 RMSEARCH_BASE_URL=http://<本机地址>:8081
 ```
 

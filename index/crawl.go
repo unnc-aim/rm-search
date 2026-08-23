@@ -3,27 +3,28 @@ package index
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
-// Scheduled newest-first/backfill crawler.
+// Watermark crawler, split by responsibility:
 //
-// State is a single row in crawl_state:
-//   - newest_crawled_id: everything at or above this id has been crawled
-//   - oldest_crawled_id: everything below this id has been crawled
-//   - backfill_done:     oldest reached the floor, historical crawling stops
+//   - CatchUpNewest: newest-first catch-up (latest -> newest watermark+1),
+//     run at boot and four times a day (0/6/12/18)
+//   - BackfillOnce: one bounded chunk below the oldest watermark; the
+//     backfill loop in the job package calls it continuously from boot
+//     until the floor is reached, after which it never runs again
 //
-// Each run first walks NEW posts backwards (latest -> newest+1, capped per
-// run), then continues the backfill downwards from oldest_crawled_id
-// (capped per run). Once the backfill hits the floor, only the newest
-// catch-up phase keeps running.
+// State lives in the single crawl_state row; newest and oldest are
+// updated with separate single-column statements so the two phases can
+// run concurrently without read-modify-write races.
 
 // crawlFloor is the lowest post id probed by the backfill.
 const crawlFloor int64 = 1
 
-// CrawlState are the persisted watermarks of the scheduled crawler.
+// CrawlState are the persisted watermarks of the crawler.
 type CrawlState struct {
 	NewestCrawledID int64
 	OldestCrawledID int64
@@ -43,7 +44,51 @@ func (i *Indexer) LoadCrawlState(ctx context.Context) (*CrawlState, error) {
 	return &st, nil
 }
 
-// saveCrawlState upserts the watermarks.
+// crawlInitMu guards the one-time watermark initialization against the
+// catch-up job and the backfill loop racing at boot.
+var crawlInitMu sync.Mutex
+
+// ensureCrawlState initializes the watermarks once: the catch-up starts
+// from the current newest post, the backfill right below it, and posts
+// already in the database (e.g. from a manual crawl) seed both ends.
+func (i *Indexer) ensureCrawlState(ctx context.Context, latest int64) (*CrawlState, error) {
+	crawlInitMu.Lock()
+	defer crawlInitMu.Unlock()
+
+	st, err := i.LoadCrawlState(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if st.NewestCrawledID != 0 {
+		return st, nil
+	}
+
+	st.NewestCrawledID = latest
+	st.OldestCrawledID = latest + 1
+	var edge struct{ Max, Min int64 }
+	if err := i.SvcCtx.Db.WithContext(ctx).
+		Raw(`SELECT COALESCE(MAX(id), 0) AS max, COALESCE(MIN(id), 0) AS min FROM bbs_post`).
+		Scan(&edge).Error; err != nil {
+		return nil, fmt.Errorf("seed crawl state: %w", err)
+	}
+	if edge.Max > st.NewestCrawledID {
+		st.NewestCrawledID = edge.Max
+	}
+	if edge.Min > 0 && edge.Min < st.OldestCrawledID {
+		st.OldestCrawledID = edge.Min
+	}
+	if edge.Min > 0 && edge.Min <= crawlFloor {
+		st.BackfillDone = true
+	}
+	logrus.Infof("crawl watermarks initialized at latest post %d (db max %d, db min %d), backfill starts at %d, done=%v",
+		latest, edge.Max, edge.Min, st.OldestCrawledID, st.BackfillDone)
+	if err := i.saveCrawlState(ctx, st); err != nil {
+		return nil, err
+	}
+	return st, nil
+}
+
+// saveCrawlState upserts the watermarks (initialization only).
 func (i *Indexer) saveCrawlState(ctx context.Context, st *CrawlState) error {
 	err := i.SvcCtx.Db.WithContext(ctx).Exec(`
 INSERT INTO crawl_state (id, newest_crawled_id, oldest_crawled_id, backfill_done)
@@ -55,6 +100,33 @@ ON CONFLICT (id) DO UPDATE SET
 		st.NewestCrawledID, st.OldestCrawledID, st.BackfillDone).Error
 	if err != nil {
 		return fmt.Errorf("save crawl state: %w", err)
+	}
+	return nil
+}
+
+// saveNewestCrawled advances the newest watermark (single column, race
+// free against backfill updates).
+func (i *Indexer) saveNewestCrawled(ctx context.Context, id int64) error {
+	err := i.SvcCtx.Db.WithContext(ctx).
+		Exec(`INSERT INTO crawl_state (id, newest_crawled_id)
+VALUES (1, ?)
+ON CONFLICT (id) DO UPDATE SET newest_crawled_id = excluded.newest_crawled_id`, id).Error
+	if err != nil {
+		return fmt.Errorf("save newest crawled: %w", err)
+	}
+	return nil
+}
+
+// saveOldestCrawled advances the backfill watermark (single column).
+func (i *Indexer) saveOldestCrawled(ctx context.Context, id int64, done bool) error {
+	err := i.SvcCtx.Db.WithContext(ctx).
+		Exec(`INSERT INTO crawl_state (id, oldest_crawled_id, backfill_done)
+VALUES (1, ?, ?)
+ON CONFLICT (id) DO UPDATE SET
+    oldest_crawled_id = excluded.oldest_crawled_id,
+    backfill_done     = excluded.backfill_done`, id, done).Error
+	if err != nil {
+		return fmt.Errorf("save oldest crawled: %w", err)
 	}
 	return nil
 }
@@ -94,9 +166,10 @@ func (i *Indexer) LatestPostID(ctx context.Context) (int64, error) {
 	return latest, nil
 }
 
-// ScheduledCrawl runs one round of the scheduled crawler. chunk bounds the
-// number of ids probed in each phase so a run always finishes.
-func (i *Indexer) ScheduledCrawl(ctx context.Context, chunk int64) error {
+// CatchUpNewest walks new posts backwards from the forum's latest down to
+// the newest watermark (a gap larger than chunk is closed over multiple
+// runs). Run at boot and by the four-times-daily schedule.
+func (i *Indexer) CatchUpNewest(ctx context.Context, chunk int64) error {
 	if chunk <= 0 {
 		chunk = 100_000
 	}
@@ -105,84 +178,76 @@ func (i *Indexer) ScheduledCrawl(ctx context.Context, chunk int64) error {
 	if err != nil {
 		return err
 	}
-
-	st, err := i.LoadCrawlState(ctx)
+	st, err := i.ensureCrawlState(ctx, latest)
 	if err != nil {
 		return err
 	}
 
-	// First run ever: nothing was missed, start the backfill right below
-	// the current newest post. Posts already in the database (e.g. from a
-	// manual cmd/crawl backfill) seed the watermarks so nothing is probed
-	// twice.
+	if latest <= st.NewestCrawledID {
+		return nil
+	}
+	low := st.NewestCrawledID + 1
+	if latest-low+1 > chunk {
+		low = latest - chunk + 1
+	}
+	logrus.Infof("crawl catch-up: [%d, %d]", low, latest)
+	if err := i.crawlDesc(ctx, latest, low); err != nil {
+		return err
+	}
+	return i.saveNewestCrawled(ctx, latest)
+}
+
+// BackfillOnce crawls one bounded chunk below the oldest watermark and
+// returns whether the backfill is complete. The job package calls it in
+// a continuous loop from container boot.
+func (i *Indexer) BackfillOnce(ctx context.Context, chunk int64) (bool, error) {
+	if chunk <= 0 {
+		chunk = 100_000
+	}
+
+	st, err := i.LoadCrawlState(ctx)
+	if err != nil {
+		return false, err
+	}
 	if st.NewestCrawledID == 0 {
-		st.NewestCrawledID = latest
-		st.OldestCrawledID = latest + 1
-		var edge struct{ Max, Min int64 }
-		if err := i.SvcCtx.Db.WithContext(ctx).
-			Raw(`SELECT COALESCE(MAX(id), 0) AS max, COALESCE(MIN(id), 0) AS min FROM bbs_post`).
-			Scan(&edge).Error; err != nil {
-			return fmt.Errorf("seed crawl state: %w", err)
+		// Not initialized yet (boot race with the catch-up job).
+		latest, err := i.LatestPostID(ctx)
+		if err != nil {
+			return false, err
 		}
-		if edge.Max > st.NewestCrawledID {
-			st.NewestCrawledID = edge.Max
-		}
-		if edge.Min > 0 && edge.Min < st.OldestCrawledID {
-			st.OldestCrawledID = edge.Min
-		}
-		if edge.Min > 0 && edge.Min <= crawlFloor {
-			st.BackfillDone = true
-		}
-		logrus.Infof("scheduled crawl initialized at latest post %d (db max %d, db min %d), backfill starts at %d, done=%v",
-			latest, edge.Max, edge.Min, st.OldestCrawledID, st.BackfillDone)
-		if err := i.saveCrawlState(ctx, st); err != nil {
-			return err
+		if st, err = i.ensureCrawlState(ctx, latest); err != nil {
+			return false, err
 		}
 	}
-
-	// Phase 1: catch up on new posts, newest first. A gap larger than
-	// chunk is closed over multiple runs.
-	if latest > st.NewestCrawledID {
-		low := st.NewestCrawledID + 1
-		if latest-low+1 > chunk {
-			low = latest - chunk + 1
-		}
-		logrus.Infof("scheduled crawl catch-up: [%d, %d]", low, latest)
-		if err := i.crawlDesc(ctx, latest, low); err != nil {
-			return err
-		}
-		st.NewestCrawledID = latest
-		if err := i.saveCrawlState(ctx, st); err != nil {
-			return err
-		}
+	if st.BackfillDone {
+		return true, nil
 	}
 
-	// Phase 2: historical backfill, continuing below the oldest watermark
-	// until the floor is reached; afterwards it never runs again.
-	if !st.BackfillDone && st.OldestCrawledID > crawlFloor {
-		high := st.OldestCrawledID - 1
-		low := high - chunk + 1
-		if low < crawlFloor {
-			low = crawlFloor
+	high := st.OldestCrawledID - 1
+	if high < crawlFloor {
+		if err := i.saveOldestCrawled(ctx, crawlFloor, true); err != nil {
+			return false, err
 		}
-		logrus.Infof("scheduled crawl backfill: [%d, %d]", low, high)
-		if err := i.crawlDesc(ctx, high, low); err != nil {
-			return err
-		}
-		st.OldestCrawledID = low - 1
-		if st.OldestCrawledID < crawlFloor {
-			st.OldestCrawledID = crawlFloor
-		}
-		if low <= crawlFloor {
-			st.BackfillDone = true
-			logrus.Infof("scheduled crawl backfill reached floor %d, historical crawling done", crawlFloor)
-		}
-		if err := i.saveCrawlState(ctx, st); err != nil {
-			return err
-		}
+		return true, nil
+	}
+	low := high - chunk + 1
+	if low < crawlFloor {
+		low = crawlFloor
+	}
+	logrus.Infof("crawl backfill chunk: [%d, %d]", low, high)
+	if err := i.crawlDesc(ctx, high, low); err != nil {
+		return false, err
 	}
 
-	return nil
+	oldest := low - 1
+	if oldest < crawlFloor {
+		oldest = crawlFloor
+	}
+	done := low <= crawlFloor
+	if done {
+		logrus.Infof("crawl backfill reached floor %d, historical crawling done", crawlFloor)
+	}
+	return done, i.saveOldestCrawled(ctx, oldest, done)
 }
 
 // crawlDesc persists ids in [low, high] descending, so the newest end of

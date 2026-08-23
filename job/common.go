@@ -1,6 +1,8 @@
 package job
 
 import (
+	"context"
+
 	"github.com/robfig/cron/v3"
 	"github.com/scutrobotlab/rm-search/index"
 	"github.com/scutrobotlab/rm-search/svc"
@@ -36,9 +38,10 @@ func (b Base) Start() {
 			OnceWhenInit: true,
 		},
 		{
-			Name: "Scheduled Crawl",
-			Spec: "0 0,6,12,18 * * *",
-			Job:  CrawlJob{Base: b, Indexer: indexer},
+			Name:         "Newest Catch-up",
+			Spec:         "0 0,6,12,18 * * *",
+			Job:          CrawlJob{Base: b, Indexer: indexer},
+			OnceWhenInit: true,
 		},
 		{
 			Name:         "Load Word Cloud",
@@ -62,4 +65,8 @@ func (b Base) Start() {
 
 	logrus.Infof("Init %d cron jobs", len(c.Entries()))
 	c.Start()
+
+	// Continuous historical backfill: runs from container boot until the
+	// floor is reached, then exits permanently (watermarks in crawl_state).
+	go BackfillLoop{Base: b, Indexer: indexer}.Start(context.Background())
 }

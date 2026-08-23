@@ -4,9 +4,9 @@
 
 RM Search 是一个前后端分离的项目，当前仓库是后端仓库。
 
-生产环境 https://search.scutbot.cn/
+生产环境 <https://search.scutbot.cn/>
 
-前端仓库 https://github.com/scutrobotlab/rm-search-heroui
+前端仓库 <https://github.com/scutrobotlab/rm-search-heroui>
 
 ## 功能介绍
 
@@ -16,7 +16,7 @@ RM Search 是一个专为 RoboMaster 赛事打造的搜索引擎。
 
 ## 发展历史
 
-完整版本见里程碑 https://search.scutbot.cn/milestone
+完整版本见里程碑 <https://search.scutbot.cn/milestone>
 
 省流版本：2025年1月20日，B站up主 --Action--
 发布了关于论坛搜索的吐槽视频，引起了广泛关注和讨论。我们受此启发开始了产品的构思。项目于同年1月21日启动，于2月16日完成首个最小功能集，并于3月9日正式发布。
@@ -41,15 +41,15 @@ RM Search 是一个专为 RoboMaster 赛事打造的搜索引擎。
 
 注：本文对于该漏洞信息的披露程度符合有关规定和已有协议。
 
-贡献者 https://security.dji.com/zh/contributors
+贡献者 <https://security.dji.com/zh/contributors>
 
 ![Snipaste_2025-08-17_13-46-19.png](docs/Snipaste_2025-08-17_13-46-19.png)
 
 ## 效果展示
 
-首发推文 https://mp.weixin.qq.com/s/hE9bwNWO0XdwbaMTxsrSzQ
+首发推文 <https://mp.weixin.qq.com/s/hE9bwNWO0XdwbaMTxsrSzQ>
 
-更新推文 https://mp.weixin.qq.com/s/rLSAF9DuE4GUPKvW90DyZQ
+更新推文 <https://mp.weixin.qq.com/s/rLSAF9DuE4GUPKvW90DyZQ>
 
 <table>
   <tr>
@@ -145,23 +145,23 @@ docker run -p 8080:8080 --name rm-search rm-search:latest
 
 - **common** 公共资源，存放各模块复用的代码、工具函数等。
 - **database** 数据库操作相关
-    - **model** 数据模型，定义与数据库表对应的实体类。
-    - **query** 数据库查询，存放 CRUD 等操作代码。
+  - **model** 数据模型，定义与数据库表对应的实体类。
+  - **query** 数据库查询，存放 CRUD 等操作代码。
 - **etc** 存放配置文件和模板。
 - **index** 索引相关
-    - **dict** 索引词典，存放分词表。
-    - **mapping** 索引映射，定义索引字段类型等。
+  - **dict** 索引词典，存放分词表。
+  - **mapping** 索引映射，定义索引字段类型等。
 - **job** 定时任务，存放定时数据同步等任务代码。
 - **recover** 有次误操作导致数据丢失，需要提取 BIN LOG 复原数据。
 - **server** 服务/接口相关
-    - **handler** 请求处理，处理客户端请求并返回响应。
-    - **middleware** 中间件，如身份验证。
+  - **handler** 请求处理，处理客户端请求并返回响应。
+  - **middleware** 中间件，如身份验证。
 - **svc** 存放配置文件和服务上下文。
 - **unittest** 单元测试
 
 ### 原理介绍
 
-获取：为 RM 官网和论坛定制的爬虫通过“全量创建+增量更新”的方式获取数据。此外内置定时爬取任务 (每天 0/6/12/18 点): 先将最新帖子倒序爬取至追新水位, 再以水位线向历史帖子回填, 触底后自动标记完成并停止历史爬取, 之后仅追新 (水位持久化于 `crawl_state` 表, 重启不回填)。
+获取：为 RM 官网和论坛定制的爬虫通过“全量创建+增量更新”的方式获取数据。此外: 每天 0/6/12/18 点将最新帖子倒序爬取至追新水位; 历史回填为启动即常驻运行的后台循环, 持续向更早的帖子推进, 触底后自动标记完成并永久退出 (水位持久化于 `crawl_state` 表, 重启后检测到完成标志直接退出)。
 
 持久化：爬虫将获取到的数据写入数据库并进行持久化。
 
