@@ -46,15 +46,15 @@ type announce struct {
 	announceDo
 
 	ALL         field.Asterisk
-	ID          field.Int64  // 公告ID
-	Found       field.Bool   // 是否找到
-	Title       field.String // 标题
-	Date        field.Time   // 日期
-	Context     field.String // 上下文
-	Content     field.String // 内容
-	Attachments field.String // 附件
-	CreateTime  field.Time   // 创建时间
-	UpdateTime  field.Time   // 更新时间
+	ID          field.Int64
+	Found       field.Bool
+	Title       field.String
+	Date        field.Time
+	Context     field.String
+	Content     field.String
+	Attachments field.String
+	CreateTime  field.Time
+	UpdateTime  field.Time
 
 	fieldMap map[string]field.Expr
 }

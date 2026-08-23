@@ -7,7 +7,7 @@ import (
 )
 
 func TestIncrementalJob_Run(t *testing.T) {
-	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithElastic())
+	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithMeili())
 	job := IncrementalJob{
 		Base:    *NewBase(svcCtx),
 		Indexer: index.NewIndexer(svcCtx),

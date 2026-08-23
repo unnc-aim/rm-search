@@ -1,4 +1,4 @@
-DataSource: "root:SET_MYSQL_ROOT_PASSWORD@(mysql:3306)/rm_search?charset=utf8mb4&parseTime=True&loc=Local"
+DataSource: "host=postgres port=5432 user=postgres password=SET_POSTGRES_PASSWORD dbname=rm_search sslmode=disable"
 MeiliSearch:
   Address: "http://meilisearch:7700"
   APIKey: "SET_MEILI_MASTER_KEY"

@@ -1,12 +1,8 @@
-DataSource: "DB_USER:DB_PASSWORD@(DB_HOST:DB_PORT)/DB_NAME?charset=utf8mb4&parseTime=True&loc=Local"
-ElasticConfig:
-  Addresses:
-    - "http://localhost:9200"
-  APIKey: "ELASTIC_API_KEY"
-  Username: "ELASTIC_USERNAME"
-  Password: "ELASTIC_PASSWORD"
+DataSource: "host=DB_HOST port=5432 user=postgres password=DB_PASSWORD dbname=rm_search sslmode=disable"
+MeiliSearch:
+  Address: "http://localhost:7700"
+  APIKey: "MEILI_MASTER_KEY"
 TikaHost: "http://localhost:9998"
-AdminToken: "ADMIN_TOKEN"
 SearchLog:
   Enabled: true
   DisabledRequestBody: false

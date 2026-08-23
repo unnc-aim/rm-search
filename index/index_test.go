@@ -9,7 +9,7 @@ import (
 
 func TestIndexer_RecreateIndex(t *testing.T) {
 	ctx := context.Background()
-	svcCtx := svc.NewContextForTest(svc.WithElastic())
+	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithMeili())
 	idx := NewIndexer(svcCtx)
 
 	err := idx.RecreateIndex(ctx)
@@ -19,104 +19,61 @@ func TestIndexer_RecreateIndex(t *testing.T) {
 	t.Log("recreate index success")
 }
 
-func TestIndexer_ScrollAndIndex(t *testing.T) {
+func TestIndexer_UpdateIndexSettings(t *testing.T) {
 	ctx := context.Background()
-	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithElastic())
+	svcCtx := svc.NewContextForTest(svc.WithMeili())
 	idx := NewIndexer(svcCtx)
 
-	index, err := idx.CreateIndex()
-	if err != nil {
+	if err := idx.UpdateIndexSettings(ctx); err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("index %s created", index)
+	t.Log("update index settings success")
+}
 
-	count, err := idx.ScrollAndIndexBbsPost(ctx, index, 1, 1_000_000)
+func TestIndexer_ScrollAndIndexBbsPost(t *testing.T) {
+	ctx := context.Background()
+	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithMeili())
+	idx := NewIndexer(svcCtx)
+
+	count, err := idx.ScrollAndIndexBbsPost(ctx, 1, 1_000_000)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("index %d posts", count)
-
-	err = idx.PutAlias(index)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("put alias %s", index)
-}
-
-func TestIndexer_DeleteUnusedIndices(t *testing.T) {
-	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithElastic())
-	idx := NewIndexer(svcCtx)
-
-	if err := idx.DeleteUnusedIndices(); err != nil {
-		t.Fatal(err)
-	}
-	t.Log("unused indices deleted")
 }
 
 func TestIndexer_ScrollAndIndexAnnounce(t *testing.T) {
 	ctx := context.Background()
-	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithElastic())
+	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithMeili())
 	idx := NewIndexer(svcCtx)
 
-	index, err := idx.CreateIndex()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("index %s created", index)
-
-	count, err := idx.ScrollAndIndexAnnounce(ctx, index, 1, 2000)
+	count, err := idx.ScrollAndIndexAnnounce(ctx, 1, 3000)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("index %d announces", count)
-
-	err = idx.PutAlias(index)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("put alias %s", index)
 }
 
 func TestIndexer_ScrollAndIndexAttachment(t *testing.T) {
 	ctx := context.Background()
-	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithElastic())
+	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithMeili(), svc.WithTika())
 	idx := NewIndexer(svcCtx)
 
-	index, err := idx.CreateIndex()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	count, err := idx.ScrollAndIndexAttachment(ctx, index, 1, 2000)
+	count, err := idx.ScrollAndIndexAttachment(ctx, 1, 3000)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("index %d attachments", count)
+}
 
-	err = idx.PutAlias(index)
+func TestIndexer_IndexLatestAnnounce(t *testing.T) {
+	ctx := context.Background()
+	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithMeili())
+	idx := NewIndexer(svcCtx)
+
+	count, err := idx.IndexLatestAnnounce(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("put alias %s", index)
-}
-
-func TestIndexer_GetLatestIndex(t *testing.T) {
-	svcCtx := svc.NewContextForTest(svc.WithDb(), svc.WithElastic())
-	idx := NewIndexer(svcCtx)
-
-	latestIndex, err := idx.GetLatestIndexName()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("latest index: %s", latestIndex)
-}
-
-func TestIndexer_UpdateAlias(t *testing.T) {
-	svcCtx := svc.NewContextForTest(svc.WithElastic())
-	idx := NewIndexer(svcCtx)
-	if err := idx.UpdateAlias("rm-search-20260116-033652"); err != nil {
-		t.Fatal(err)
-	}
-
-	t.Logf("alias updated")
+	t.Logf("index %d latest announces", count)
 }

@@ -44,13 +44,13 @@ type bbsPost struct {
 	bbsPostDo
 
 	ALL        field.Asterisk
-	ID         field.Int64  // 帖子ID
-	Code       field.Int32  // 状态码
-	Message    field.String // 状态信息
-	Success    field.Bool   // 是否成功
-	Data       field.String // 数据
-	CreateTime field.Time   // 创建时间
-	UpdateTime field.Time   // 更新时间
+	ID         field.Int64
+	Code       field.Int32
+	Message    field.String
+	Success    field.Bool
+	Data       field.String
+	CreateTime field.Time
+	UpdateTime field.Time
 
 	fieldMap map[string]field.Expr
 }

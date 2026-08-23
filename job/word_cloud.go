@@ -2,7 +2,6 @@ package job
 
 import (
 	"context"
-	"fmt"
 	"github.com/patrickmn/go-cache"
 	"github.com/scutrobotlab/rm-search/common"
 	"github.com/scutrobotlab/rm-search/svc"
@@ -21,7 +20,7 @@ func (j WordCloudJob) Run() {
 	// 从数据库查询搜索日志
 	const Limit = 100
 	var rows []common.WordCloudItem
-	query := fmt.Sprintf("SELECT `query`, COUNT(*) AS `count` FROM `search_log` GROUP BY `query` ORDER BY `count` DESC LIMIT ?")
+	query := `SELECT "query", COUNT(*) AS count FROM search_log GROUP BY "query" ORDER BY count DESC LIMIT ?`
 	if err := db.WithContext(ctx).Raw(query, Limit).Scan(&rows).Error; err != nil {
 		logrus.Errorf("Query search log error: %v", err)
 		return

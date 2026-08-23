@@ -1,6 +1,6 @@
 ARG GO_BUILD_ARGS="-trimpath -ldflags -s -w"
 
-FROM golang:1.23-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 ENV CGO_ENABLED=0

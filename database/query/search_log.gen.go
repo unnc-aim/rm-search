@@ -49,18 +49,18 @@ type searchLog struct {
 	searchLogDo
 
 	ALL            field.Asterisk
-	ID             field.Int64  // 搜索日志ID
-	RemoteIP       field.String // 远程IP
-	UserAgent      field.String // 用户代理
-	RequestBody    field.String // 请求体
-	RequestLength  field.Int32  // 请求内容长度
-	Query          field.String // 查询
-	Status         field.Int32  // 状态码
-	ResponseBody   field.String // 响应体
-	ResponseLength field.Int32  // 响应内容长度
-	Latency        field.Int32  // 延迟
-	CreateTime     field.Time   // 创建时间
-	UpdateTime     field.Time   // 更新时间
+	ID             field.Int64
+	RemoteIP       field.String
+	UserAgent      field.String
+	RequestBody    field.String
+	RequestLength  field.Int32
+	Query          field.String
+	Status         field.Int32
+	ResponseBody   field.String
+	ResponseLength field.Int32
+	Latency        field.Int32
+	CreateTime     field.Time
+	UpdateTime     field.Time
 
 	fieldMap map[string]field.Expr
 }

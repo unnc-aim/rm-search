@@ -6,7 +6,7 @@ import (
 	"github.com/google/go-tika/tika"
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/scutrobotlab/rm-search/database/query"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -22,8 +22,8 @@ func NewContextForTest(options ...Option) *Context {
 
 func WithDb() Option {
 	return func(c *Context) {
-		const DataSource = "root:123456@(localhost:3306)/rm_search?charset=utf8mb4&parseTime=True&loc=Local"
-		db, err := gorm.Open(mysql.Open(DataSource), &gorm.Config{})
+		const DataSource = "host=localhost port=5432 user=postgres password=123456 dbname=rm_search sslmode=disable"
+		db, err := gorm.Open(postgres.Open(DataSource), &gorm.Config{})
 		if err != nil {
 			panic(err)
 		}

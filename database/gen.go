@@ -1,12 +1,12 @@
 package main
 
 import (
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gen"
 	"gorm.io/gorm"
 )
 
-const DSN = "root:123456@(localhost:3306)/rm_search?charset=utf8mb4&parseTime=True&loc=Local"
+const DSN = "host=localhost port=5432 user=postgres password=123456 dbname=rm_search sslmode=disable"
 
 func main() {
 	g := gen.NewGenerator(gen.Config{
@@ -16,7 +16,7 @@ func main() {
 		FieldWithIndexTag: true,
 	})
 
-	db, _ := gorm.Open(mysql.Open(DSN))
+	db, _ := gorm.Open(postgres.Open(DSN))
 	g.UseDB(db) // reuse your gorm db
 
 	g.ApplyBasic(

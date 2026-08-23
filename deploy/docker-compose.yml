@@ -1,24 +1,21 @@
-# Self-hosted rm-search stack: MySQL + Meilisearch + rm-search + nginx.
+# Self-hosted rm-search stack: PostgreSQL + Meilisearch + rm-search + nginx.
 # See deploy/README.md for the bring-up steps.
 services:
-  mysql:
-    image: mysql:8.4
+  postgres:
+    image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set in .env}
-      MYSQL_DATABASE: rm_search
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_DB: rm_search
       TZ: ${TZ:-Asia/Shanghai}
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
     volumes:
-      - ./data/mysql:/var/lib/mysql
+      - ./data/pg:/var/lib/postgresql/data
       # Schema is applied on first boot only (empty data dir).
       - ../database/rm_search.sql:/docker-entrypoint-initdb.d/rm_search.sql:ro
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p$$MYSQL_ROOT_PASSWORD"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d rm_search"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -42,7 +39,7 @@ services:
     image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/${GITHUB_REPOSITORY_NAME}:latest
     restart: unless-stopped
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
       meilisearch:
         condition: service_started

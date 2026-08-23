@@ -12,13 +12,13 @@ const TableNameBbsPost = "bbs_post"
 
 // BbsPost mapped from table <bbs_post>
 type BbsPost struct {
-	ID         int64     `gorm:"column:id;type:bigint unsigned;primaryKey;autoIncrement:true;comment:帖子ID" json:"id"`                                                         // 帖子ID
-	Code       int32     `gorm:"column:code;type:int;not null;index:idx_code,priority:1;comment:状态码" json:"code"`                                                             // 状态码
-	Message    string    `gorm:"column:message;type:varchar(256);not null;comment:状态信息" json:"message"`                                                                       // 状态信息
-	Success    bool      `gorm:"column:success;type:tinyint(1);not null;comment:是否成功" json:"success"`                                                                         // 是否成功
-	Data       string    `gorm:"column:data;type:json;not null;comment:数据" json:"data"`                                                                                       // 数据
-	CreateTime time.Time `gorm:"column:create_time;type:timestamp(3);not null;index:idx_create_time,priority:1;default:CURRENT_TIMESTAMP(3);comment:创建时间" json:"create_time"` // 创建时间
-	UpdateTime time.Time `gorm:"column:update_time;type:timestamp(3);not null;index:idx_update_time,priority:1;default:CURRENT_TIMESTAMP(3);comment:更新时间" json:"update_time"` // 更新时间
+	ID         int64     `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true" json:"id"`
+	Code       int32     `gorm:"column:code;type:integer;not null;index:idx_bbs_post_code,priority:1" json:"code"`
+	Message    string    `gorm:"column:message;type:character varying(256);not null;default:''::character varying" json:"message"`
+	Success    bool      `gorm:"column:success;type:boolean;not null" json:"success"`
+	Data       string    `gorm:"column:data;type:jsonb;not null" json:"data"`
+	CreateTime time.Time `gorm:"column:create_time;type:timestamp(3) with time zone;not null;index:idx_bbs_post_create_time,priority:1;default:CURRENT_TIMESTAMP(3)" json:"create_time"`
+	UpdateTime time.Time `gorm:"column:update_time;type:timestamp(3) with time zone;not null;index:idx_bbs_post_update_time,priority:1;default:CURRENT_TIMESTAMP(3)" json:"update_time"`
 }
 
 // TableName BbsPost's table name

@@ -77,10 +77,10 @@ RM Search 是一个专为 RoboMaster 赛事打造的搜索引擎。
 
 ### 依赖工具、环境
 
-- Go 1.23
+- Go 1.25
 - Docker
-- MySQL 8
-- ElasticSearch 8.17.1
+- PostgreSQL 16
+- Meilisearch 1.12
 - Apache Tika
 
 ### 编译、安装方式

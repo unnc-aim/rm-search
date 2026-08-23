@@ -1,12 +1,12 @@
 # rm-search 私有部署
 
-独立的 rm-search 全套栈: MySQL (原始数据) + Meilisearch (索引) + rm-search (服务与自动增量) + nginx (对外暴露)。适用于给其他服务 (如 aim-feishu-rm-assistant) 提供独立的数据源。
+独立的 rm-search 全套栈: PostgreSQL (原始数据) + Meilisearch (索引) + rm-search (服务与自动增量) + nginx (对外暴露)。适用于给其他服务 (如 aim-feishu-rm-assistant) 提供独立的数据源。
 
 ## 组成
 
 | 服务 | 用途 | 端口 |
 | --- | --- | --- |
-| mysql:8.4 | 原始爬取数据 (bbs_post / announce / attachment) | 容器内 3306 |
+| postgres:16 | 原始爬取数据 (bbs_post / announce / attachment) | 容器内 5432 |
 | meilisearch:v1.12 | 倒排索引 | 容器内 7700 |
 | rm-search | HTTP 服务 + 定时任务 (论坛增量每分钟、公告增量每分钟、词云每 5 分钟) | 容器内 8080 |
 | nginx | 对外统一入口, 把 `/api/ms/*` 映射到 rm-search 的 `/ms/*` (与生产路径结构一致) | 宿主机 `LISTEN_PORT` (默认 8081) |
@@ -20,11 +20,11 @@ cd deploy/
 cp .env.example .env
 cp config.template.yaml config.yaml
 #    生成随机密钥并同步填入两处:
-#    .env 的 MYSQL_ROOT_PASSWORD / MEILI_MASTER_KEY
+#    .env 的 POSTGRES_PASSWORD / MEILI_MASTER_KEY
 #    config.yaml 的 DataSource 密码 / MeiliSearch.APIKey
 openssl rand -hex 24   # 可用来生成密钥
 
-# 2. 启动 (首次启动 mysql 会自动执行 database/rm_search.sql 建表)
+# 2. 启动 (首次启动 postgres 会自动执行 database/rm_search.sql 建表)
 docker compose up -d --build
 
 # 3. 首次建索引设置 (分词、排序规则)
@@ -71,7 +71,7 @@ RMSEARCH_BASE_URL=http://<本机地址>:8081
 ## 运维说明
 
 - **自动更新**: rm-search 进程内置定时任务, 论坛三类帖和公告都是每分钟增量同步, 无需外部 CronJob
-- **数据目录**: `deploy/data/` (mysql、meili), 备份拷走即可
-- **资源参考**: 全量数据下 MySQL 约 2~5 GB, Meilisearch 内存 1~2 GB, 建议 2C4G 以上
+- **数据目录**: `deploy/data/` (pg、meili), 备份拷走即可
+- **资源参考**: 全量数据下 PostgreSQL 约 2~5 GB, Meilisearch 内存 1~2 GB, 建议 2C4G 以上
 - **DJIMetaKey**: 目前论坛接口无需登录, 留空即可; 若日后论坛重新强制登录, 在 config.yaml 填入登录 Cookie 的 `_meta_key`
 - **升级**: `git pull && docker compose up -d --build` (数据保留)

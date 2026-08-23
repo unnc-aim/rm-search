@@ -47,16 +47,16 @@ type attachment struct {
 	attachmentDo
 
 	ALL          field.Asterisk
-	ID           field.Int64  // 附件ID
-	URL          field.String // URL
-	Name         field.String // 名称
-	Size         field.Int64  // 大小
-	Type         field.String // 类型
-	Sha256       field.String // SHA256
-	Content      field.String // 内容
-	LastModified field.Int64  // 最后修改时间
-	CreateTime   field.Time   // 创建时间
-	UpdateTime   field.Time   // 更新时间
+	ID           field.Int64
+	URL          field.String
+	Name         field.String
+	Size         field.Int64
+	Type         field.String
+	Sha256       field.String
+	Content      field.String
+	LastModified field.Int64
+	CreateTime   field.Time
+	UpdateTime   field.Time
 
 	fieldMap map[string]field.Expr
 }
