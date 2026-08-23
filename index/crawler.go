@@ -33,6 +33,9 @@ var (
 
 // GetBbsPost 获取帖子信息
 func (i *Indexer) GetBbsPost(id int64) (ret *BbsPostResp, err error) {
+	if err := bbsPacer.reserve(); err != nil {
+		return nil, err
+	}
 	reqUrl := fmt.Sprintf("https://bbs.robomaster.com/developers-server/rest/posts/info/%d", id)
 	req, err := http.NewRequest(http.MethodPost, reqUrl, nil)
 	if err != nil {
@@ -50,6 +53,7 @@ func (i *Indexer) GetBbsPost(id int64) (ret *BbsPostResp, err error) {
 
 	if resp.StatusCode != 200 {
 		if resp.StatusCode == 405 {
+			bbsPacer.penalize()
 			return nil, ErrStatusMethodNotAllowed
 		}
 		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
@@ -65,6 +69,9 @@ func (i *Indexer) GetBbsPost(id int64) (ret *BbsPostResp, err error) {
 
 // GetBbsPostList 获取帖子列表
 func (i *Indexer) GetBbsPostList(reqBody *BbsPostListReq) (ret *BbsPostListResp, err error) {
+	if err := bbsPacer.reserve(); err != nil {
+		return nil, err
+	}
 	const ReqUrl = "https://bbs.robomaster.com/developers-server/rest/posts/list"
 	body, err := json.Marshal(reqBody)
 	if err != nil {
@@ -88,6 +95,7 @@ func (i *Indexer) GetBbsPostList(reqBody *BbsPostListReq) (ret *BbsPostListResp,
 
 	if resp.StatusCode != 200 {
 		if resp.StatusCode == 405 {
+			bbsPacer.penalize()
 			return nil, ErrStatusMethodNotAllowed
 		}
 		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
