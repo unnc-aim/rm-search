@@ -45,12 +45,24 @@ func splitStatements(script string) []string {
 		sb         strings.Builder
 		inSingle   bool // inside '...'
 		inDollar   bool // inside $$...$$
+		inLine     bool // inside -- ... until newline
+		inBlock    bool // inside /* ... */
 	)
 	runes := []rune(script)
 	for i := 0; i < len(runes); i++ {
 		r := runes[i]
 		sb.WriteRune(r)
 		switch {
+		case inLine:
+			if r == '\n' {
+				inLine = false
+			}
+		case inBlock:
+			if r == '*' && i+1 < len(runes) && runes[i+1] == '/' {
+				inBlock = false
+				sb.WriteRune(runes[i+1])
+				i++
+			}
 		case inSingle:
 			if r == '\'' {
 				inSingle = false
@@ -61,6 +73,15 @@ func splitStatements(script string) []string {
 				sb.WriteRune(runes[i+1])
 				i++
 			}
+		case r == '-' && i+1 < len(runes) && runes[i+1] == '-':
+			// Line comments may contain ';', which must not split.
+			inLine = true
+			sb.WriteRune(runes[i+1])
+			i++
+		case r == '/' && i+1 < len(runes) && runes[i+1] == '*':
+			inBlock = true
+			sb.WriteRune(runes[i+1])
+			i++
 		case r == '\'':
 			inSingle = true
 		case r == '$' && i+1 < len(runes) && runes[i+1] == '$':
