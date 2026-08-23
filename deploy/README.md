@@ -23,7 +23,7 @@ cp config.template.yaml config.yaml
 #    config.yaml 的 DataSource 密码 / MeiliSearch.APIKey
 openssl rand -hex 24   # 可用来生成密钥
 
-# 2. 启动 (首次启动 postgres 会自动执行 database/rm_search.sql 建表)
+# 2. 启动 (rm-search 二进制内嵌建表 DDL, 启动时自动应用, 无需手动初始化)
 docker compose up -d --build
 
 # 3. 首次建索引设置 (分词、排序规则)

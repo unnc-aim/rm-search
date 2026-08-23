@@ -9,6 +9,7 @@ import (
 	"github.com/patrickmn/go-cache"
 	"github.com/scutrobotlab/rm-search/common"
 	"github.com/scutrobotlab/rm-search/database/query"
+	"github.com/scutrobotlab/rm-search/database/schema"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -32,6 +33,11 @@ func Ctx() *Context {
 func InitContext(c Config) {
 	db, err := gorm.Open(postgres.Open(c.DataSource), &gorm.Config{})
 	if err != nil {
+		panic(err)
+	}
+
+	// Idempotent schema bootstrap: deployments need nothing but the image.
+	if err := schema.Ensure(db); err != nil {
 		panic(err)
 	}
 

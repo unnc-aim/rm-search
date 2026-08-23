@@ -10,8 +10,6 @@ services:
       TZ: ${TZ:-Asia/Shanghai}
     volumes:
       - ./data/pg:/var/lib/postgresql/data
-      # Schema is applied on first boot only (empty data dir).
-      - ../database/rm_search.sql:/docker-entrypoint-initdb.d/rm_search.sql:ro
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     healthcheck:

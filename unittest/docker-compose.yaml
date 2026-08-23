@@ -1,7 +1,8 @@
 # Local development dependencies for running the manual test functions:
 # PostgreSQL + Meilisearch + Tika. Start with `docker compose up -d` in
 # this directory; the DSNs in svc/context4test.go and database/gen.go
-# point at these services.
+# point at these services. The schema is applied automatically by the
+# binary at startup (database/schema).
 services:
   postgres:
     container_name: postgres
@@ -15,8 +16,6 @@ services:
       - "5432:5432"
     volumes:
       - ./pg/:/var/lib/postgresql/data
-      # Schema is applied on first boot only (empty data dir).
-      - ../database/rm_search.sql:/docker-entrypoint-initdb.d/rm_search.sql:ro
 
   meilisearch:
     container_name: meilisearch

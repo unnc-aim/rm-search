@@ -87,9 +87,9 @@ RM Search 是一个专为 RoboMaster 赛事打造的搜索引擎。
 
 #### 填写配置
 
-请先确保你已经启动了 MySQL 和 ElasticSearch
+请先确保你已经启动了 PostgreSQL 和 Meilisearch
 
-数据库建表 DML 位于 database/rm_search.sql
+数据库建表 DDL 位于 database/schema/rm_search.sql, 已内嵌进二进制, 服务启动时自动应用 (幂等), 无需手动建表
 
 ```Bash
 # 复制配置文件模版
@@ -110,7 +110,7 @@ index/persistence_test.go 文件中提供了一系列用于从各个数据源获
 
 #### 构建索引
 
-将数据保存到数据库后，需要在 ElastiSearch 中构建索引。
+将数据保存到数据库后，需要在 Meilisearch 中构建索引。
 
 你可以执行 index/index_test.go 中的 TestIndexer_RecreateIndex 函数。
 
@@ -165,9 +165,9 @@ docker run -p 8080:8080 --name rm-search rm-search:latest
 
 持久化：爬虫将获取到的数据写入数据库并进行持久化。
 
-索引：将数据库中持久化的数据写入 Elastic Search 构建索引。
+索引：将数据库中持久化的数据写入 Meilisearch 构建索引。
 
-Elastic Search 使用分词后的文本基于倒排索引的数据结构提供高效的检索服务。
+Meilisearch 使用分词后的文本基于倒排索引的数据结构提供高效的检索服务。
 
 ### RoadMap
 

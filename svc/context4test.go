@@ -6,6 +6,7 @@ import (
 	"github.com/google/go-tika/tika"
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/scutrobotlab/rm-search/database/query"
+	"github.com/scutrobotlab/rm-search/database/schema"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -25,6 +26,9 @@ func WithDb() Option {
 		const DataSource = "host=localhost port=5432 user=postgres password=123456 dbname=rm_search sslmode=disable"
 		db, err := gorm.Open(postgres.Open(DataSource), &gorm.Config{})
 		if err != nil {
+			panic(err)
+		}
+		if err := schema.Ensure(db); err != nil {
 			panic(err)
 		}
 		c.Db = db

@@ -12,6 +12,7 @@ on:
       - 'go.sum'
       - 'Dockerfile'
       - '.dockerignore'
+      - 'database/schema/**'
       - '.github/workflows/build.yaml'
 
 permissions:
