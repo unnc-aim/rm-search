@@ -11,11 +11,9 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go build ${GO_BUILD_ARGS} -o bin/recreate-index ./cmd/recreate-index
-RUN go build ${GO_BUILD_ARGS} -o bin/incremental-index ./cmd/incremental-index
-RUN go build ${GO_BUILD_ARGS} -o bin/setup-index ./cmd/setup-index
-RUN go build ${GO_BUILD_ARGS} -o bin/crawl ./cmd/crawl
-
+# One binary with subcommands (server|setup-index|recreate-index|
+# incremental-index|crawl) instead of five ~50MB binaries, so image
+# updates transfer a single small layer.
 RUN go build ${GO_BUILD_ARGS} -o bin/rm-search .
 
 FROM alpine:3.20
@@ -27,18 +25,21 @@ RUN apk add --no-cache tzdata
 
 WORKDIR /root/
 
-# Timezone via mounted host files (see deploy/docker-compose.yml); TZ env
-# overrides when set.
-ENV TZ=Asia/Shanghai
-
-COPY --from=builder /app/bin/recreate-index /usr/local/bin/recreate-index
-COPY --from=builder /app/bin/incremental-index /usr/local/bin/incremental-index
-COPY --from=builder /app/bin/crawl /usr/local/bin/crawl
 COPY --from=builder /app/bin/rm-search /usr/local/bin/rm-search
+
+# Byte-sized compatibility wrappers for the former standalone tools.
+RUN for tool in setup-index recreate-index incremental-index crawl; do \
+        printf '#!/bin/sh\nexec /usr/local/bin/rm-search %s "$@"\n' "$tool" \
+            > "/usr/local/bin/$tool" && chmod +x "/usr/local/bin/$tool"; \
+    done
 
 EXPOSE 8080
 
 ENV GIN_MODE=release
 ENV PROD=true
+
+# Timezone via mounted host files (see deploy/docker-compose.yml); TZ env
+# overrides when set.
+ENV TZ=Asia/Shanghai
 
 ENTRYPOINT ["/usr/local/bin/rm-search"]
