@@ -3,6 +3,8 @@ package index
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -23,6 +25,20 @@ import (
 
 // crawlFloor is the lowest post id probed by the backfill.
 const crawlFloor int64 = 1
+
+// crawlGoroutines bounds the watermark crawler's request concurrency.
+// Deliberately below the manual crawl tool's 50: the backfill loop runs
+// for hours unattended and a lower rate keeps the forum's rate limiter
+// (405) and gateway (504) out of the picture.
+func crawlGoroutines() int {
+	if v := os.Getenv("RM_SEARCH_CRAWL_GOROUTINES"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return n
+		}
+		logrus.Warnf("invalid RM_SEARCH_CRAWL_GOROUTINES=%q, using default 20", v)
+	}
+	return 20
+}
 
 // CrawlState are the persisted watermarks of the crawler.
 type CrawlState struct {
@@ -260,5 +276,5 @@ func (i *Indexer) crawlDesc(ctx context.Context, high, low int64) error {
 	for id := high; id >= low; id-- {
 		ids = append(ids, id)
 	}
-	return i.BatchPersistenceIds(ctx, ids, 50)
+	return i.BatchPersistenceIds(ctx, ids, crawlGoroutines())
 }

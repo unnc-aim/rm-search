@@ -91,7 +91,7 @@ RM Search 是一个专为 RoboMaster 赛事打造的搜索引擎。
 
 数据库建表 DDL 位于 database/schema/rm_search.sql, 已内嵌进二进制, 服务启动时自动应用 (幂等), 无需手动建表
 
-```Bash
+```bash
 # 复制配置文件模版
 cp etc/config.template.yaml etc/config.yaml
 
@@ -99,47 +99,49 @@ cp etc/config.template.yaml etc/config.yaml
 vim etc/config.yaml
 ```
 
-RoboMaster 论坛需要登录后才能访问。你需要先登录论坛，再从控制台 Cookies 中获取 `_meta_key` 的值，填入配置文件的
-`DJIMetaKey` 字段。
+目前论坛的列表与帖子接口无需登录即可访问, `DJIMetaKey` 留空即可。若日后论坛重新强制登录, 先登录论坛,
+从控制台 Cookies 中获取 `_meta_key` 的值, 填入配置文件的 `DJIMetaKey` 字段。
 
 #### 获取数据
 
-你需要先从 RM 论坛和公告中获取数据，并保存在数据库中。
+服务启动后自动获取数据: 每分钟增量同步论坛最新帖与公告; 后台回填循环从最新帖子持续向历史推进, 触底后永久停止
+(水位持久化于 `crawl_state` 表)。也可用子命令手动加速或补爬:
 
-index/persistence_test.go 文件中提供了一系列用于从各个数据源获取数据的单元测试。
+```bash
+# 手动爬取指定范围 (断点可续, 与自动水位线兼容)
+rm-search crawl --posts-start 0 --posts-end 2000000 --announce-start 1 --announce-end 3000
+```
+
+index/persistence_test.go 文件中另有一系列用于从各个数据源获取数据的单元测试。
 
 #### 构建索引
 
-将数据保存到数据库后，需要在 Meilisearch 中构建索引。
+服务启动时会自动应用索引设置 (可过滤/可排序字段等), 无需手动初始化。增量任务会自动索引新抓取的内容;
+回填或手动爬取入库的历史数据, 用子命令全量灌入索引:
 
-你可以执行 index/index_test.go 中的 TestIndexer_RecreateIndex 函数。
-
-也可以在配置 AdminToken 后通过 API 调用异步重建索引。
-
-```Bash
-curl --location --request POST 'http://localhost:8080/admin/recreate-index?async=true' \
---header 'Authorization: Bearer system' \
---header 'Accept: */*' \
---header 'Host: localhost:8080' \
---header 'Connection: keep-alive'
+```bash
+rm-search recreate-index -config etc/config.yaml
 ```
 
 #### 本地运行
 
 完成索引构建后，你就可以从主函数启动。
 
-```Bash
+```bash
 go run .
 ```
 
 #### Docker 镜像
 
-你也可以构建用于生产环境的 Docker 镜像。
+你也可以构建用于生产环境的 Docker 镜像 (单二进制 + 子命令, 建表 DDL 与索引设置均随启动自动应用)。
 
-```Bash
+```bash
 docker build -t rm-search:latest .
 docker run -p 8080:8080 --name rm-search rm-search:latest
+# 容器内子命令: server (默认) | setup-index | recreate-index | incremental-index | crawl
 ```
+
+一键私有部署栈 (PostgreSQL + Meilisearch + rm-search) 见 deploy/ 目录。
 
 ### 目录结构及用途
 
@@ -147,6 +149,8 @@ docker run -p 8080:8080 --name rm-search rm-search:latest
 - **database** 数据库操作相关
   - **model** 数据模型，定义与数据库表对应的实体类。
   - **query** 数据库查询，存放 CRUD 等操作代码。
+  - **schema** 建表 DDL (内嵌进二进制, 启动时自动应用)。
+- **deploy** 自托管部署栈 (docker compose: PostgreSQL + Meilisearch + rm-search)。
 - **etc** 存放配置文件和模板。
 - **index** 索引相关
   - **dict** 索引词典，存放分词表。
@@ -188,25 +192,25 @@ RM 的《史记》。
 
 ### 研发团队
 
-**后端工程师**
+#### **后端工程师**
 
 2023赛季信息组组长 常霆钰
 
-**前端工程师**
+#### **前端工程师**
 
 2023赛季信息组组长 常霆钰
 
-**运维工程师**
+#### **运维工程师**
 
 2024&2025赛季软件开发组组长 罗棨文
 
 2023赛季信息组组长 常霆钰
 
-**宣传运营**
+#### **宣传运营**
 
 2023赛季宣运组组长 杨卓石
 
-**LOGO 设计**
+#### **LOGO 设计**
 
 2024赛季软件开发组组长 温欣怡
 
