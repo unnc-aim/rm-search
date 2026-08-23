@@ -74,6 +74,18 @@ CREATE INDEX IF NOT EXISTS idx_search_log_latency ON search_log (latency);
 CREATE INDEX IF NOT EXISTS idx_search_log_create_time ON search_log (create_time);
 COMMENT ON TABLE search_log IS '搜索日志';
 
+-- Watermarks of the scheduled newest-first/backfill crawler (single row, id=1).
+CREATE TABLE IF NOT EXISTS crawl_state
+(
+    id                integer      PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    newest_crawled_id bigint       NOT NULL DEFAULT 0,
+    oldest_crawled_id bigint       NOT NULL DEFAULT 9223372036854775807,
+    backfill_done     boolean      NOT NULL DEFAULT FALSE,
+    create_time       timestamptz(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    update_time       timestamptz(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+);
+COMMENT ON TABLE crawl_state IS '定时爬取水位';
+
 -- PostgreSQL has no ON UPDATE CURRENT_TIMESTAMP; emulate it so
 -- update_time keeps the semantics the MySQL schema had.
 CREATE OR REPLACE FUNCTION set_update_time() RETURNS trigger AS $$
@@ -86,7 +98,7 @@ $$ LANGUAGE plpgsql;
 DO $$
 DECLARE t text;
 BEGIN
-    FOREACH t IN ARRAY ARRAY['bbs_post', 'announce', 'attachment', 'search_log'] LOOP
+    FOREACH t IN ARRAY ARRAY['bbs_post', 'announce', 'attachment', 'search_log', 'crawl_state'] LOOP
         EXECUTE format('DROP TRIGGER IF EXISTS trg_%s_update ON %I', t, t);
         EXECUTE format('CREATE TRIGGER trg_%s_update BEFORE UPDATE ON %I
                         FOR EACH ROW EXECUTE FUNCTION set_update_time()', t, t);

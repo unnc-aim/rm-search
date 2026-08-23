@@ -36,6 +36,11 @@ func (b Base) Start() {
 			OnceWhenInit: true,
 		},
 		{
+			Name: "Scheduled Crawl",
+			Spec: "0 0,6,12,18 * * *",
+			Job:  CrawlJob{Base: b, Indexer: indexer},
+		},
+		{
 			Name:         "Load Word Cloud",
 			Spec:         "@every 5m",
 			Job:          WordCloudJob{Base: b},

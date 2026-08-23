@@ -1,4 +1,4 @@
-# Self-hosted rm-search stack: PostgreSQL + Meilisearch + rm-search + nginx.
+# Self-hosted rm-search stack: PostgreSQL + Meilisearch + rm-search.
 # See deploy/README.md for the bring-up steps.
 services:
   postgres:
@@ -45,22 +45,10 @@ services:
         condition: service_started
     environment:
       TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "${LISTEN_PORT:-8081}:8080"
     volumes:
       # The binary reads etc/config.yaml relative to its workdir /root.
       - ./config.yaml:/root/etc/config.yaml:ro
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
-
-  nginx:
-    image: nginx:1.27-alpine
-    restart: unless-stopped
-    depends_on:
-      - rm-search
-    ports:
-      - "${LISTEN_PORT:-8081}:80"
-    environment:
-      TZ: ${TZ:-Asia/Shanghai}
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro

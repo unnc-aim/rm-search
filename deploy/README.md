@@ -1,6 +1,6 @@
 # rm-search 私有部署
 
-独立的 rm-search 全套栈: PostgreSQL (原始数据) + Meilisearch (索引) + rm-search (服务与自动增量) + nginx (对外暴露)。适用于给其他服务 (如 aim-feishu-rm-assistant) 提供独立的数据源。
+独立的 rm-search 全套栈: PostgreSQL (原始数据) + Meilisearch (索引) + rm-search (服务与自动增量), rm-search 直接对外暴露 (原生支持 `/api/ms/*` 与 `/ms/*` 两种路径前缀)。适用于给其他服务 (如 aim-feishu-rm-assistant) 提供独立的数据源。
 
 ## 组成
 
@@ -8,8 +8,7 @@
 | --- | --- | --- |
 | postgres:16 | 原始爬取数据 (bbs_post / announce / attachment) | 容器内 5432 |
 | meilisearch:v1.12 | 倒排索引 | 容器内 7700 |
-| rm-search | HTTP 服务 + 定时任务 (论坛增量每分钟、公告增量每分钟、词云每 5 分钟) | 容器内 8080 |
-| nginx | 对外统一入口, 把 `/api/ms/*` 映射到 rm-search 的 `/ms/*` (与生产路径结构一致) | 宿主机 `LISTEN_PORT` (默认 8081) |
+| rm-search | HTTP 服务 + 定时任务 (论坛增量每分钟、公告增量每分钟、定时爬取每天 4 次、词云每 5 分钟); 对外入口, 原生支持 `/api/ms/*` (与生产路径一致) 和 `/ms/*` | 宿主机 `LISTEN_PORT` (默认 8081) → 容器 8080 |
 
 ## 部署步骤
 
@@ -30,8 +29,11 @@ docker compose up -d --build
 # 3. 首次建索引设置 (分词、排序规则)
 docker compose run --rm rm-search /usr/local/bin/setup-index
 
-# 4. 全量回填 (后台运行, 论坛帖子 + 公告)
-#    全量约需数天; 可先爬近期区间快速可用, 剩余的继续后台爬:
+# 4. (可选) 加速全量回填
+#    rm-search 内置定时爬取任务 (每天 0/6/12/18 点): 每次先把最新帖子倒序
+#    爬到追新水位, 再从回填水位向更早的帖子推进 (每轮约 10 万个 ID,
+#    RM_SEARCH_CRAWL_CHUNK 可调), 触底后自动停止历史回填、只保留追新。
+#    全自动回填约需 2~5 天; 等不及可用 crawl 手动加速 (与水位线兼容):
 docker compose run --rm rm-search /usr/local/bin/crawl \
     --announce-start 1 --announce-end 3000
 nohup docker compose run --rm rm-search /usr/local/bin/crawl \
@@ -74,4 +76,4 @@ RMSEARCH_BASE_URL=http://<本机地址>:8081
 - **数据目录**: `deploy/data/` (pg、meili), 备份拷走即可
 - **资源参考**: 全量数据下 PostgreSQL 约 2~5 GB, Meilisearch 内存 1~2 GB, 建议 2C4G 以上
 - **DJIMetaKey**: 目前论坛接口无需登录, 留空即可; 若日后论坛重新强制登录, 在 config.yaml 填入登录 Cookie 的 `_meta_key`
-- **升级**: `git pull && docker compose up -d --build` (数据保留)
+- **升级**: `git pull && docker compose pull rm-search && docker compose up -d` (数据保留)
