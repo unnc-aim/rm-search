@@ -47,6 +47,7 @@ func (i *Indexer) GetBbsPost(id int64) (ret *BbsPostResp, err error) {
 	})
 	resp, err := client.Do(req)
 	if err != nil {
+		bbsPacer.complete(false)
 		return nil, errors.Wrapf(err, "post request")
 	}
 	defer resp.Body.Close()
@@ -56,8 +57,10 @@ func (i *Indexer) GetBbsPost(id int64) (ret *BbsPostResp, err error) {
 			bbsPacer.penalize()
 			return nil, ErrStatusMethodNotAllowed
 		}
+		bbsPacer.complete(false)
 		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
 	}
+	bbsPacer.complete(true)
 
 	err = json.NewDecoder(resp.Body).Decode(&ret)
 	if err != nil {
@@ -89,6 +92,7 @@ func (i *Indexer) GetBbsPostList(reqBody *BbsPostListReq) (ret *BbsPostListResp,
 	})
 	resp, err := client.Do(req)
 	if err != nil {
+		bbsPacer.complete(false)
 		return nil, errors.Wrapf(err, "post request")
 	}
 	defer resp.Body.Close()
@@ -98,8 +102,10 @@ func (i *Indexer) GetBbsPostList(reqBody *BbsPostListReq) (ret *BbsPostListResp,
 			bbsPacer.penalize()
 			return nil, ErrStatusMethodNotAllowed
 		}
+		bbsPacer.complete(false)
 		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
 	}
+	bbsPacer.complete(true)
 
 	err = json.NewDecoder(resp.Body).Decode(&ret)
 	if err != nil {

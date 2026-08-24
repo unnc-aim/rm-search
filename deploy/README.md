@@ -29,8 +29,9 @@ docker compose up -d --build
 # 3. (可选) 加速全量回填
 #    rm-search 启动后自动持续回填历史帖子 (后台循环, 每块约 10 万个 ID,
 #    RM_SEARCH_CRAWL_CHUNK 可调; 并发默认 20, RM_SEARCH_CRAWL_GOROUTINES 可调;
-#    对论坛的全局请求速率默认 40 QPS (RM_SEARCH_BBS_QPS), 收到限流 (405) 时
-#    自动全局冷却 30 秒起步、指数退避到最长 10 分钟),
+#    对论坛的全局请求速率默认 40 QPS (RM_SEARCH_BBS_QPS); 收到限流 (405) 时
+#    全局冷却固定 5 分钟, 之后单请求探针恢复, 仍被限流则再次冷却 5 分钟,
+#    如此循环直至配额回满),
 #    触底后标记完成并永久停止;
 #    每天 0/6/12/18 点另有追新任务补齐最新帖子。等不及可用 crawl 手动加速:
 docker compose run --rm rm-search /usr/local/bin/crawl \

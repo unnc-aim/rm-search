@@ -1,61 +1,61 @@
 package index
 
 import (
+	"errors"
 	"testing"
 	"time"
 )
 
-func TestPacerCooldown(t *testing.T) {
+func TestPacerCircuitBreaker(t *testing.T) {
 	p := newPacer()
 	p.interval = time.Millisecond
 
-	// Unblocked: reserve succeeds.
+	// Closed: paced reserves succeed.
 	if err := p.reserve(); err != nil {
-		t.Fatalf("reserve before penalty: %v", err)
+		t.Fatalf("reserve closed: %v", err)
 	}
+	p.complete(true)
 
-	// A 405 starts the base cooldown; reserve now fails fast.
+	// A 405 opens the circuit for the fixed cooldown; reserves fail fast.
 	p.penalize()
-	if err := p.reserve(); err != ErrStatusMethodNotAllowed {
-		t.Fatalf("reserve during cooldown = %v, want ErrStatusMethodNotAllowed", err)
+	if err := p.reserve(); !errors.Is(err, ErrStatusMethodNotAllowed) {
+		t.Fatalf("reserve open = %v, want ErrStatusMethodNotAllowed", err)
 	}
 
-	// Concurrent penalties while blocked must not stack the cooldown.
-	p.penalize()
-	p.mu.Lock()
-	blocked := p.blockedUntil
-	p.mu.Unlock()
-	if remain := time.Until(blocked); remain > pacerBasePenalty {
-		t.Fatalf("cooldown stacked: %v > base %v", remain, pacerBasePenalty)
-	}
-
-	// After the cooldown expires, requests flow again...
+	// After the cooldown the circuit is half-open: exactly one probe.
 	p.mu.Lock()
 	p.blockedUntil = time.Now().Add(-time.Millisecond)
 	p.mu.Unlock()
 	if err := p.reserve(); err != nil {
-		t.Fatalf("reserve after expiry: %v", err)
+		t.Fatalf("probe reserve: %v", err)
+	}
+	// While the probe is in flight everyone else fails fast.
+	if err := p.reserve(); !errors.Is(err, ErrStatusMethodNotAllowed) {
+		t.Fatal("second concurrent probe admitted; want fast fail")
 	}
 
-	// ...but another 405 inside the quiet window escalates.
+	// A failing probe reopens the circuit for another full cooldown.
+	p.complete(false)
 	p.penalize()
+	if err := p.reserve(); !errors.Is(err, ErrStatusMethodNotAllowed) {
+		t.Fatal("reserve after failed probe should fail")
+	}
 	p.mu.Lock()
-	penalty := p.penalty
+	cooldown := time.Until(p.blockedUntil)
 	p.mu.Unlock()
-	if penalty != pacerBasePenalty*2 {
-		t.Fatalf("penalty = %v, want escalated %v", penalty, pacerBasePenalty*2)
+	if cooldown <= pacerCooldown-time.Second {
+		t.Fatalf("cooldown = %v, want a fresh full %v", cooldown, pacerCooldown)
 	}
 
-	// A quiet stretch resets the penalty to base.
+	// A succeeding probe closes the circuit; paced traffic resumes.
 	p.mu.Lock()
-	p.lastPenalty = time.Now().Add(-pacerQuietReset - time.Minute)
-	p.blockedUntil = time.Now().Add(-time.Millisecond) // not blocked
+	p.blockedUntil = time.Now().Add(-time.Millisecond)
 	p.mu.Unlock()
-	p.penalize()
-	p.mu.Lock()
-	penalty = p.penalty
-	p.mu.Unlock()
-	if penalty != pacerBasePenalty {
-		t.Fatalf("penalty after quiet = %v, want base %v", penalty, pacerBasePenalty)
+	if err := p.reserve(); err != nil {
+		t.Fatalf("probe reserve: %v", err)
+	}
+	p.complete(true)
+	if err := p.reserve(); err != nil {
+		t.Fatalf("reserve after closed: %v", err)
 	}
 }

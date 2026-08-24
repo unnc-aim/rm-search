@@ -9,39 +9,34 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// bbsPacer coordinates ALL requests to bbs.robomaster.com:
+// bbsPacer coordinates ALL requests to bbs.robomaster.com as a circuit
+// breaker with a fixed cooldown:
 //
-//   - a global minimum interval between requests (a simple slot
-//     reservation), capping aggregate QPS regardless of goroutine count
-//   - a global cooldown when the forum answers 405 (its rate-limit
-//     response): every caller fails fast while the cooldown lasts, so
-//     the forum's quota bucket can actually refill. Independent
-//     per-goroutine retries were observed to keep the limiter tripped
-//     indefinitely at ~1-2 QPS of poke traffic.
-//
-// The cooldown escalates (30s doubling to 10min) while 405s persist and
-// resets to the base after 10 quiet minutes.
+//   - closed (normal): a global minimum interval between requests caps
+//     aggregate QPS regardless of goroutine count
+//   - open (rate-limited): every caller fails fast with zero HTTP
+//     traffic for a fixed 5 minutes
+//   - half-open (probing): after the cooldown exactly ONE request goes
+//     out. If it succeeds the circuit closes and full (paced) traffic
+//     resumes; if it rate-limits again, the cooldown restarts. This
+//     repeats until the forum's quota bucket refills.
 var bbsPacer = newPacer()
 
-const (
-	pacerBasePenalty = 30 * time.Second
-	pacerMaxPenalty  = 10 * time.Minute
-	pacerQuietReset  = 10 * time.Minute
-)
+// pacerCooldown is the fixed wait after a 405 and between probes.
+const pacerCooldown = 5 * time.Minute
 
 type pacer struct {
 	mu           sync.Mutex
-	interval     time.Duration // min spacing between requests
-	nextSlot     time.Time     // earliest next request
-	blockedUntil time.Time
-	penalty      time.Duration
-	lastPenalty  time.Time
+	interval     time.Duration // min spacing between requests (closed)
+	nextSlot     time.Time     // earliest next request (closed)
+	blockedUntil time.Time     // open until this instant
+	wasBlocked   bool          // a cooldown has opened; half-open until a success
+	probing      bool          // half-open: the single in-flight probe
 }
 
 func newPacer() *pacer {
 	p := &pacer{
 		interval: 25 * time.Millisecond, // ~40 QPS global cap
-		penalty:  pacerBasePenalty,
 	}
 	if v := os.Getenv("RM_SEARCH_BBS_QPS"); v != "" {
 		if q, err := strconv.Atoi(v); err == nil && q > 0 {
@@ -53,9 +48,10 @@ func newPacer() *pacer {
 	return p
 }
 
-// reserve blocks for the request's slot. It returns ErrStatusMethodNotAllowed
-// immediately while a cooldown is active, so callers reuse their existing
-// rate-limit handling without issuing any HTTP traffic.
+// reserve admits one request. It returns ErrStatusMethodNotAllowed
+// immediately while the circuit is open or while another probe is in
+// flight, so callers reuse their existing rate-limit handling without
+// issuing any HTTP traffic.
 func (p *pacer) reserve() error {
 	p.mu.Lock()
 	now := time.Now()
@@ -63,6 +59,17 @@ func (p *pacer) reserve() error {
 	if p.blockedUntil.After(now) {
 		p.mu.Unlock()
 		return ErrStatusMethodNotAllowed
+	}
+
+	if p.wasBlocked {
+		// Half-open: allow exactly one probe at a time.
+		if p.probing {
+			p.mu.Unlock()
+			return ErrStatusMethodNotAllowed
+		}
+		p.probing = true
+		p.mu.Unlock()
+		return nil
 	}
 
 	slot := p.nextSlot.Add(p.interval)
@@ -78,28 +85,25 @@ func (p *pacer) reserve() error {
 	return nil
 }
 
-// penalize is called on a 405 response: it starts or extends the global
-// cooldown. Escalation happens on each cooldown expiry that immediately
-// sees another 405; a quiet stretch resets to the base penalty.
+// complete reports the outcome of a request admitted by reserve.
+// A success closes a half-open circuit; any outcome releases the probe
+// slot so the next single probe can go out.
+func (p *pacer) complete(ok bool) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.probing = false
+	if ok {
+		p.wasBlocked = false
+	}
+}
+
+// penalize is called on a 405 response: (re)open the circuit for the
+// fixed cooldown.
 func (p *pacer) penalize() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-
-	now := time.Now()
-	if p.blockedUntil.After(now) {
-		// A cooldown is already running; escalate only once it expires
-		// and another 405 arrives, so concurrent callers don't stack.
-		return
-	}
-	if now.Sub(p.lastPenalty) > pacerQuietReset {
-		p.penalty = pacerBasePenalty
-	} else {
-		p.penalty *= 2
-		if p.penalty > pacerMaxPenalty {
-			p.penalty = pacerMaxPenalty
-		}
-	}
-	p.blockedUntil = now.Add(p.penalty)
-	p.lastPenalty = now
-	logrus.Warnf("forum rate-limited (405); pausing all forum requests for %s", p.penalty)
+	p.probing = false
+	p.wasBlocked = true
+	p.blockedUntil = time.Now().Add(pacerCooldown)
+	logrus.Warnf("forum rate-limited (405); pausing all forum requests for %s", pacerCooldown)
 }
