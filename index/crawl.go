@@ -184,7 +184,8 @@ func (i *Indexer) LatestPostID(ctx context.Context) (int64, error) {
 
 // CatchUpNewest walks new posts backwards from the forum's latest down to
 // the newest watermark (a gap larger than chunk is closed over multiple
-// runs). Run at boot and by the four-times-daily schedule.
+// runs). Run at boot and by the four-times-daily schedule. The newest
+// watermark advances per post, contiguously from the top.
 func (i *Indexer) CatchUpNewest(ctx context.Context, chunk int64) error {
 	if chunk <= 0 {
 		chunk = 100_000
@@ -207,20 +208,24 @@ func (i *Indexer) CatchUpNewest(ctx context.Context, chunk int64) error {
 		low = latest - chunk + 1
 	}
 	logrus.Infof("crawl catch-up: [%d, %d]", low, latest)
-	if err := i.crawlDesc(ctx, latest, low); err != nil {
+	if err := i.crawlOrdered(ctx, latest, low, func(id int64) {
+		if err := i.saveNewestCrawled(ctx, id); err != nil {
+			logrus.Warnf("save newest watermark at %d: %v", id, err)
+		}
+	}); err != nil {
 		return err
 	}
-	return i.saveNewestCrawled(ctx, latest)
+	return nil
 }
 
-// BackfillOnce crawls one bounded chunk below the oldest watermark and
-// returns whether the backfill is complete. The job package calls it in
-// a continuous loop from container boot.
-func (i *Indexer) BackfillOnce(ctx context.Context, chunk int64) (bool, error) {
-	if chunk <= 0 {
-		chunk = 100_000
-	}
-
+// BackfillDesc descends from the oldest watermark towards the floor with
+// an ordered work queue: workers take ids strictly from the front, no id
+// is fetched twice, and any single failure stops every worker (the caller
+// cools down and resumes from the persisted watermark). The oldest
+// watermark advances per post, contiguously, so an interruption loses at
+// most the handful of ids still in flight. limit bounds the descent for
+// tests; <=0 means run to the floor.
+func (i *Indexer) BackfillDesc(ctx context.Context, limit int64) (bool, error) {
 	st, err := i.LoadCrawlState(ctx)
 	if err != nil {
 		return false, err
@@ -246,35 +251,110 @@ func (i *Indexer) BackfillOnce(ctx context.Context, chunk int64) (bool, error) {
 		}
 		return true, nil
 	}
-	low := high - chunk + 1
-	if low < crawlFloor {
-		low = crawlFloor
+	low := crawlFloor
+	if limit > 0 && high-low+1 > limit {
+		low = high - limit + 1
 	}
-	logrus.Infof("crawl backfill chunk: [%d, %d]", low, high)
-	if err := i.crawlDesc(ctx, high, low); err != nil {
+	logrus.Infof("crawl backfill: [%d, %d]", low, high)
+	err = i.crawlOrdered(ctx, high, low, func(id int64) {
+		if err := i.saveOldestCrawled(ctx, id, false); err != nil {
+			logrus.Warnf("save oldest watermark at %d: %v", id, err)
+		}
+	})
+	if err != nil {
 		return false, err
 	}
-
-	oldest := low - 1
-	if oldest < crawlFloor {
-		oldest = crawlFloor
-	}
-	done := low <= crawlFloor
-	if done {
+	if low <= crawlFloor {
+		if err := i.saveOldestCrawled(ctx, crawlFloor, true); err != nil {
+			return false, err
+		}
 		logrus.Infof("crawl backfill reached floor %d, historical crawling done", crawlFloor)
+		return true, nil
 	}
-	return done, i.saveOldestCrawled(ctx, oldest, done)
+	return false, nil
 }
 
-// crawlDesc persists ids in [low, high] descending, so the newest end of
-// a range lands in the database first.
-func (i *Indexer) crawlDesc(ctx context.Context, high, low int64) error {
+// crawlOrdered feeds ids from high down to low through a FIFO queue with
+// crawlGoroutines workers. Each id is handed out exactly once; the first
+// failure cancels the dispatch and stops all workers; completions advance
+// a contiguous frontier (per-post progress) reported through onUpdate.
+func (i *Indexer) crawlOrdered(ctx context.Context, high, low int64, onUpdate func(id int64)) error {
 	if high < low {
 		return nil
 	}
-	ids := make([]int64, 0, high-low+1)
-	for id := high; id >= low; id-- {
-		ids = append(ids, id)
+
+	var (
+		stop     = make(chan struct{})
+		stopOnce sync.Once
+		mu       sync.Mutex
+		firstErr error
+	)
+	fail := func(id int64, err error) {
+		mu.Lock()
+		if firstErr == nil {
+			firstErr = fmt.Errorf("persist post %d: %w", id, err)
+		}
+		mu.Unlock()
+		stopOnce.Do(func() { close(stop) })
 	}
-	return i.BatchPersistenceIds(ctx, ids, crawlGoroutines())
+
+	ids := make(chan int64)
+	done := make(chan int64)
+
+	// Dispatcher: the queue front, strictly ordered, distributable.
+	go func() {
+		defer close(ids)
+		for id := high; id >= low; id-- {
+			select {
+			case ids <- id:
+			case <-stop:
+				return
+			}
+		}
+	}()
+
+	// Workers: one attempt per id; any failure stops everyone.
+	var wg sync.WaitGroup
+	for w := 0; w < crawlGoroutines(); w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for id := range ids {
+				if err := i.Persistence(ctx, id); err != nil {
+					fail(id, err)
+					return
+				}
+				select {
+				case done <- id:
+				case <-stop:
+					return
+				}
+			}
+		}()
+	}
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	// Collector: advance the contiguous frontier, per post.
+	next := high
+	completed := make(map[int64]struct{})
+	for id := range done {
+		completed[id] = struct{}{}
+		for {
+			if _, ok := completed[next]; !ok {
+				break
+			}
+			delete(completed, next)
+			if onUpdate != nil {
+				onUpdate(next)
+			}
+			next--
+		}
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+	return firstErr
 }

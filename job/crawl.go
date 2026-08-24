@@ -40,8 +40,9 @@ func (j CrawlJob) Run() {
 	}
 }
 
-// BackfillLoop 历史回填: 容器启动后持续向更早的帖子推进, 每轮一个块,
-// 触底后持久化 backfill_done 并永久退出; 重启后立即检测到完成标志直接退出。
+// BackfillLoop 历史回填: 容器启动后以有序队列持续向更早的帖子推进
+// (逐帖推进水位, 任一请求失败全体停止), 失败后冷却 5 分钟从水位线续爬;
+// 触底后持久化 backfill_done 并永久退出。
 type BackfillLoop struct {
 	Base
 	Indexer *index.Indexer
@@ -57,9 +58,9 @@ func (l BackfillLoop) Start(ctx context.Context) {
 	}()
 
 	for {
-		done, err := l.Indexer.BackfillOnce(ctx, crawlChunk())
+		done, err := l.Indexer.BackfillDesc(ctx, 0)
 		if err != nil {
-			logrus.Errorf("crawl backfill error: %v", err)
+			logrus.Errorf("crawl backfill error, cooling down 5m and resuming from watermark: %v", err)
 			select {
 			case <-ctx.Done():
 				return
@@ -71,12 +72,12 @@ func (l BackfillLoop) Start(ctx context.Context) {
 			logrus.Info("crawl backfill already complete or just finished")
 			return
 		}
-		// Brief pause between chunks so the loop stays lightweight and
-		// reactive to shutdown.
+		// Unbounded descent finished without done: only possible via ctx
+		// cancellation; verify before looping.
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(2 * time.Second):
+		default:
 		}
 	}
 }

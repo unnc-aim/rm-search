@@ -45,13 +45,14 @@ func TestIndexer_CrawlPhases(t *testing.T) {
 			st.NewestCrawledID, st.OldestCrawledID)
 	}
 
-	// Backfill iterations keep advancing the oldest watermark downwards.
+	// Backfill descends exactly `limit` ids per invocation (per-post
+	// watermark), touching nothing else.
 	for round := 0; round < 2; round++ {
 		before, err := idx.LoadCrawlState(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
-		done, err := idx.BackfillOnce(ctx, 15)
+		done, err := idx.BackfillDesc(ctx, 15)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -62,9 +63,9 @@ func TestIndexer_CrawlPhases(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if after.OldestCrawledID >= before.OldestCrawledID {
-			t.Fatalf("round %d: backfill did not advance: %d -> %d",
-				round, before.OldestCrawledID, after.OldestCrawledID)
+		if want := before.OldestCrawledID - 15; after.OldestCrawledID != want {
+			t.Fatalf("round %d: oldest = %d, want exact per-post advance to %d",
+				round, after.OldestCrawledID, want)
 		}
 		if after.NewestCrawledID != before.NewestCrawledID {
 			t.Fatalf("round %d: backfill touched newest watermark: %d -> %d",
