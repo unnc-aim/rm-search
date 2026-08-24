@@ -324,11 +324,10 @@ func (i *Indexer) crawlOrdered(ctx context.Context, high, low int64, onUpdate fu
 					fail(id, err)
 					return
 				}
-				select {
-				case done <- id:
-				case <-stop:
-					return
-				}
+				// Report unconditionally: the collector drains until all
+				// workers exit, and a completion must never be dropped to
+				// the stop branch or the contiguous watermark regresses.
+				done <- id
 			}
 		}()
 	}
