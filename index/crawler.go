@@ -22,11 +22,20 @@ var (
 
 var (
 	ProxyURL *url.URL
-	client   = &http.Client{
+	// The forum/announce/attachment fetch client. IdleConnTimeout and the
+	// overall Timeout matter behind TUN proxies (e.g. mihomo on the NAS):
+	// connections idle for ~10-15s are silently reaped, and a reused dead
+	// connection never delivers the request — without a client timeout it
+	// hangs forever. Closing idle connections after 5s forces a fresh
+	// connection before the reap window.
+	client = &http.Client{
+		Timeout: 30 * time.Second,
 		Transport: &http.Transport{
 			Proxy: func(*http.Request) (*url.URL, error) {
 				return ProxyURL, nil
 			},
+			IdleConnTimeout:     5 * time.Second,
+			TLSHandshakeTimeout: 10 * time.Second,
 		},
 	}
 )
